@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://bitkit.sh/schemas/bitkit.kit.v1.json",
+  "$id": "https://app.bitkit.sh/schemas/bitkit.kit.v1.json",
   "title": "bitkit identity kit",
   "type": "object",
   "required": [

@@ -1,7 +1,7 @@
 node_modules/
 .wrangler/
+.cloudflare/
 .tmp/
 .dev.vars
 .env*
 !.env.example
-.cloudflare/

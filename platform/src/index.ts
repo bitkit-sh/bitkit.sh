@@ -5,6 +5,9 @@ import bitkit from "./generator.js";
 type Tenant = { slug: string; script: string; hostname: string; owner: string; status: string };
 type KitRecord = { id: string; slug: string; name: string; published_at: number };
 const APEX = "bitkit.sh";
+// The kit API and setup scripts live on app.<zone>; every other <slug>.<zone> is a tenant.
+const APP = `app.${APEX}`;
+export const RESERVED_SLUGS = new Set(["app", "www", "api", "admin", "mail"]);
 
 const b32 = (bytes: Uint8Array) => {
   const a = "abcdefghijklmnopqrstuvwxyz234567";
@@ -73,8 +76,8 @@ async function apex(request: Request, env: Env, url: URL): Promise<Response> {
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
-    // Tenants live on <slug>.APEX; the apex and the workers.dev hostname serve the kit API.
-    if (!url.hostname.endsWith(`.${APEX}`)) return apex(request, env, url);
+    // app.<zone>, the apex, and the workers.dev hostname serve the kit API; <slug>.<zone> is a tenant.
+    if (url.hostname === APP || !url.hostname.endsWith(`.${APEX}`)) return apex(request, env, url);
 
     // Dynamic Workers: preview generated code in an isolate with no outbound network.
     if (url.pathname.startsWith("/_bitkit/sandbox/")) {
@@ -109,6 +112,7 @@ type ProvisionParams = { kit: { brand: { slug: string; name: string }; services:
 export class ProvisionTenant extends WorkflowEntrypoint<Env, ProvisionParams> {
   async run(event: WorkflowEvent<ProvisionParams>, step: WorkflowStep) {
     const { kit } = event.payload;
+    if (RESERVED_SLUGS.has(kit.brand.slug)) throw new Error(`slug ${kit.brand.slug} is reserved`);
     const slug = kit.brand.slug, script = `tenant-${slug}`, hostname = `${slug}.${this.env.PLATFORM_ZONE}`;
     const api = (path: string, init: RequestInit = {}) =>
       fetch(`https://api.cloudflare.com/client/v4/accounts/${this.env.CF_ACCOUNT_ID}${path}`, {

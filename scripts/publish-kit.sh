@@ -5,7 +5,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 : "${BITKIT_TOKEN:?set BITKIT_TOKEN first}"
-curl -fsS -X POST "${BITKIT_ORIGIN:-https://bitkit.sh}/api/kits" \
+curl -fsS -X POST "${BITKIT_ORIGIN:-https://app.bitkit.sh}/api/kits" \
   -H "authorization: Bearer $BITKIT_TOKEN" -H "content-type: application/json" \
   --data-binary @bitkit.kit.json
 echo
