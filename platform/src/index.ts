@@ -76,8 +76,9 @@ async function apex(request: Request, env: Env, url: URL): Promise<Response> {
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
-    // app.<zone>, the apex, and the workers.dev hostname serve the kit API; <slug>.<zone> is a tenant.
-    if (url.hostname === APP || !url.hostname.endsWith(`.${APEX}`)) return apex(request, env, url);
+    // app.<zone>, the apex, and workers.dev serve the kit API; every other hostname (<slug>.<zone> or an owner domain) is a tenant.
+    const host = url.hostname;
+    if (host === APP || host === APEX || host.endsWith(".workers.dev")) return apex(request, env, url);
 
     // Dynamic Workers: preview generated code in an isolate with no outbound network.
     if (url.pathname.startsWith("/_bitkit/sandbox/")) {
@@ -93,8 +94,8 @@ export default {
       return worker.getEntrypoint().fetch(request);
     }
 
-    // Tenant routing: <slug>.bitkit.sh or a custom hostname mapped in the registry.
-    const tenant = await env.REGISTRY.prepare("SELECT * FROM tenants WHERE hostname = ? AND status = 'active'").bind(url.hostname).first<Tenant>();
+    // Tenant routing: <slug>.bitkit.sh plus any custom hostnames mapped in tenant_hosts.
+    const tenant = await env.REGISTRY.prepare("SELECT t.* FROM tenants t LEFT JOIN tenant_hosts h ON h.slug = t.slug WHERE (t.hostname = ?1 OR h.hostname = ?1) AND t.status = 'active' LIMIT 1").bind(host).first<Tenant>();
     if (!tenant) return new Response("No site here yet", { status: 404 });
     try {
       return await env.TENANTS.get(tenant.script).fetch(request);

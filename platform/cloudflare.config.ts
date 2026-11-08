@@ -3,13 +3,16 @@
 // dispatch namespace, runs Dynamic Workers, and provisions tenants with a Workflow.
 import { bindings, defineConfig, exports, triggers } from "cf/config";
 import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+// Owner domains attached to the platform (apex and www per tenant). cf deploy keeps only
+// the domains listed here, so add a tenant domain to this file before redeploying.
+import tenantDomains from "./tenant-domains.json" with { type: "json" };
 
 export default defineConfig({
   worker: {
     name: "bitkit-platform",
     compatibilityDate: "2026-11-08",
     entrypoint,
-    domains: ["app.bitkit.sh"],
+    domains: ["app.bitkit.sh", ...tenantDomains],
     triggers: [triggers.fetch({ pattern: "*.bitkit.sh/*", zone: "bitkit.sh" })],
     env: {
       TENANTS: bindings.dispatchNamespace({ namespace: "bitkit-tenants" }),
