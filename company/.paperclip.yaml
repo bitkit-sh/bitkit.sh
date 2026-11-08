@@ -1,0 +1,237 @@
+# Paperclip vendor extension. Routines arrive paused; the board enables them.
+schema: paperclip/v1
+company:
+  logoPath: assets/mark.svg
+  requireBoardApprovalForNewAgents: true
+agents:
+  director:
+    role: ceo
+    icon: crown
+    adapter:
+      type: claude_local
+      config:
+        model: opus
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  brand-lead:
+    role: cmo
+    icon: gem
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  identity-designer:
+    role: designer
+    icon: wand
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  copywriter:
+    role: general
+    icon: message-square
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  cto:
+    role: cto
+    icon: cpu
+    adapter:
+      type: claude_local
+      config:
+        model: opus
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  platform-engineer:
+    role: engineer
+    icon: code
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  edge-devops:
+    role: devops
+    icon: globe
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  qa:
+    role: qa
+    icon: bug
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  delivery-lead:
+    role: pm
+    icon: rocket
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+  security:
+    role: security
+    icon: shield
+    adapter:
+      type: claude_local
+      config:
+        model: sonnet
+    runtime:
+      heartbeat:
+        enabled: false
+        wakeOnDemand: true
+    budgetMonthlyCents: 2500
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_CODE_OAUTH_TOKEN:
+          kind: secret
+          requirement: optional
+projects:
+  brand-system:
+    leadAgentSlug: brand-lead
+    status: planned
+  web-presence:
+    leadAgentSlug: platform-engineer
+    status: planned
+  dev-platform:
+    leadAgentSlug: platform-engineer
+    status: planned
+  account-launch:
+    leadAgentSlug: delivery-lead
+    status: planned
+  kit-builder:
+    leadAgentSlug: cto
+    status: planned
+routines:
+  weekly-brand-review:
+    status: paused
+    triggers:
+      - kind: schedule
+        enabled: false
+        cronExpression: "0 9 * * 1"
+        timezone: America/Chicago
+  weekly-pin-review:
+    status: paused
+    triggers:
+      - kind: schedule
+        enabled: false
+        cronExpression: "0 10 * * 1"
+        timezone: America/Chicago

@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bitkit.sh/schemas/bitkit.kit.v1.json",
+  "title": "bitkit identity kit",
+  "type": "object",
+  "required": [
+    "schema",
+    "brand",
+    "handle",
+    "platforms",
+    "palette",
+    "type",
+    "mark",
+    "voice"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bitkit.kit/v1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "brand": {
+      "type": "object",
+      "required": [
+        "name",
+        "slug"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 90
+        },
+        "category": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5
+        }
+      }
+    },
+    "handle": {
+      "type": "object",
+      "required": [
+        "primary"
+      ],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "handle",
+          "bio",
+          "bioLimit"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "bioLimit": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "required": [
+        "primary",
+        "secondary",
+        "accent",
+        "ink",
+        "paper"
+      ],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "secondary": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "accent": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "ink": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "paper": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "dark": {
+          "type": "object",
+          "required": [
+            "primary",
+            "secondary",
+            "accent",
+            "ink",
+            "paper"
+          ],
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "secondary": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "accent": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "ink": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "paper": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        }
+      }
+    },
+    "type": {
+      "type": "object",
+      "required": [
+        "heading",
+        "body"
+      ]
+    },
+    "shape": {
+      "type": "object",
+      "properties": {
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 64
+        }
+      }
+    },
+    "mark": {
+      "type": "object",
+      "required": [
+        "kind",
+        "glyphs"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "seal",
+            "circle",
+            "square"
+          ]
+        },
+        "glyphs": {
+          "type": "string",
+          "maxLength": 3
+        }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "required": [
+        "bio"
+      ],
+      "properties": {
+        "formality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playfulness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "boldness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "brand",
+          "accounts",
+          "devex",
+          "deploy",
+          "platform",
+          "ci",
+          "mcp",
+          "skills",
+          "agents",
+          "a2ui"
+        ]
+      }
+    }
+  }
+}

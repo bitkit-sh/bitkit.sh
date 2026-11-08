@@ -1,0 +1,221 @@
+{
+  "$schema": "./schema/bitkit.kit.v1.json",
+  "schema": "bitkit.kit/v1",
+  "generatedAt": "2026-11-08T20:00:00Z",
+  "brand": {
+    "name": "bitkit",
+    "slug": "coopers-coffee",
+    "tagline": "Brand identity in a box: one kit, every surface.",
+    "category": "Software",
+    "keywords": [
+      "identity",
+      "kits",
+      "cloudflare"
+    ]
+  },
+  "handle": {
+    "primary": "bitkitsh",
+    "candidates": [
+      "bitkit",
+      "bitkithq",
+      "thebitkit",
+      "hellobitkit",
+      "bidentity"
+    ],
+    "overrides": {}
+  },
+  "platforms": [
+    {
+      "id": "threads",
+      "name": "Threads",
+      "handle": "bitkitsh",
+      "url": "https://threads.net/@bitkitsh",
+      "signup": "https://www.threads.net/",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts…",
+      "bioLimit": 150,
+      "avatar": "320×320",
+      "banner": null
+    },
+    {
+      "id": "x",
+      "name": "X",
+      "handle": "bitkitsh",
+      "url": "https://x.com/bitkitsh",
+      "signup": "https://x.com/i/flow/signup",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts; bitkit…",
+      "bioLimit": 160,
+      "avatar": "400×400",
+      "banner": "1500×500"
+    },
+    {
+      "id": "bluesky",
+      "name": "Bluesky",
+      "handle": "bitkitsh",
+      "url": "https://bsky.app/profile/bitkitsh.bsky.social",
+      "signup": "https://bsky.app/",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts; bitkit prepares the rest.",
+      "bioLimit": 256,
+      "avatar": "1000×1000",
+      "banner": "3000×1000"
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn Page",
+      "handle": "bitkitsh",
+      "url": "https://linkedin.com/company/bitkitsh",
+      "signup": "https://www.linkedin.com/company/setup/new/",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent…",
+      "bioLimit": 120,
+      "avatar": "400×400",
+      "banner": "1128×191"
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "handle": "bitkitsh",
+      "url": "https://youtube.com/@bitkitsh",
+      "signup": "https://www.youtube.com/create_channel",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts; bitkit prepares the rest.",
+      "bioLimit": 1000,
+      "avatar": "800×800",
+      "banner": "2560×1440"
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "handle": "bitkitsh",
+      "url": "https://github.com/bitkitsh",
+      "signup": "https://github.com/account/organizations/new",
+      "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts; bitkit…",
+      "bioLimit": 160,
+      "avatar": "500×500",
+      "banner": null
+    }
+  ],
+  "palette": {
+    "primary": "#8e1b2e",
+    "secondary": "#2b3a55",
+    "accent": "#e8b54a",
+    "ink": "#17161a",
+    "paper": "#f7f4f0",
+    "dark": {
+      "primary": "#aa5462",
+      "secondary": "#556177",
+      "accent": "#e8b54a",
+      "ink": "#faf8f6",
+      "paper": "#121215"
+    }
+  },
+  "type": {
+    "heading": "Bricolage Grotesque",
+    "body": "Hanken Grotesk",
+    "scale": 1.25
+  },
+  "shape": {
+    "radius": 14
+  },
+  "mark": {
+    "kind": "seal",
+    "glyphs": "b",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 120 120\" width=\"512\" height=\"512\" role=\"img\" aria-label=\"bitkit mark\"><polygon points=\"119.20,60.00 115.79,64.88 112.00,69.17 114.09,74.49 115.63,80.25 110.75,83.67 105.73,86.40 105.87,92.12 105.35,98.05 99.60,99.60 93.94,100.45 92.12,105.87 89.60,111.27 83.67,110.75 78.06,109.62 74.49,114.09 70.28,118.30 64.88,115.79 60.00,112.80 55.12,115.79 49.72,118.30 45.51,114.09 41.94,109.62 36.33,110.75 30.40,111.27 27.88,105.87 26.06,100.45 20.40,99.60 14.65,98.05 14.13,92.12 14.27,86.40 9.25,83.67 4.37,80.25 5.91,74.49 8.00,69.17 4.21,64.88 0.80,60.00 4.21,55.12 8.00,50.83 5.91,45.51 4.37,39.75 9.25,36.33 14.27,33.60 14.13,27.88 14.65,21.95 20.40,20.40 26.06,19.55 27.88,14.13 30.40,8.73 36.33,9.25 41.94,10.38 45.51,5.91 49.72,1.70 55.12,4.21 60.00,7.20 64.88,4.21 70.28,1.70 74.49,5.91 78.06,10.38 83.67,9.25 89.60,8.73 92.12,14.13 93.94,19.55 99.60,20.40 105.35,21.95 105.87,27.88 105.73,33.60 110.75,36.33 115.63,39.75 114.09,45.51 112.00,50.83 115.79,55.12 119.20,60.00\" fill=\"#8e1b2e\"/><circle cx=\"60\" cy=\"60\" r=\"44\" fill=\"none\" stroke=\"#ffffff\" stroke-opacity=\"0.45\" stroke-width=\"1.5\"/><text x=\"60\" y=\"61\" text-anchor=\"middle\" dominant-baseline=\"central\" font-family='\"Bricolage Grotesque\", system-ui, sans-serif' font-weight=\"700\" font-size=\"54\" fill=\"#ffffff\" letter-spacing=\"-1\">b</text></svg>"
+  },
+  "voice": {
+    "formality": 0.45,
+    "playfulness": 0.35,
+    "boldness": 0.6,
+    "do": [
+      "Show the kit, then the claim",
+      "Name the file a feature lives in"
+    ],
+    "dont": [
+      "Growth-hack language",
+      "Promises about follower counts"
+    ],
+    "bio": "bitkit turns a brand into one kit: brand book, tokens, profile sheets, repo, CI, Cloudflare services, and an agent team. You create the accounts; bitkit prepares the rest.",
+    "bios": {}
+  },
+  "repo": {
+    "host": "github",
+    "owner": "bitkit-sh",
+    "name": "bitkit"
+  },
+  "deploy": {
+    "worker": "bitkit-site",
+    "domain": "bitkit.sh",
+    "preview": "temporary"
+  },
+  "domain": {
+    "query": "bitkit",
+    "results": [],
+    "checkedAt": "",
+    "account": ""
+  },
+  "services": [
+    "kv",
+    "d1",
+    "r2",
+    "analytics"
+  ],
+  "hosting": {
+    "model": "connect",
+    "namespace": "bitkit-tenants",
+    "platformZone": "bitkit.sh"
+  },
+  "publish": {
+    "id": "",
+    "setup": "",
+    "publishedAt": ""
+  },
+  "devex": [
+    "mise",
+    "just",
+    "lefthook",
+    "oxlint",
+    "biome",
+    "editorconfig",
+    "devcontainer",
+    "vitest"
+  ],
+  "ci": [
+    "ci",
+    "deploy",
+    "preview",
+    "actions-audit"
+  ],
+  "mcp": [
+    "cloudflare-docs",
+    "cloudflare-bindings",
+    "cloudflare-observability",
+    "github",
+    "context7"
+  ],
+  "skills": [
+    "brand-voice",
+    "brand-tokens",
+    "kit-editor",
+    "account-launch",
+    "cf-preview-claim",
+    "domain-search"
+  ],
+  "agents": {
+    "purpose": "studio",
+    "size": "full",
+    "budgetCents": 2500,
+    "timezone": "America/Chicago"
+  },
+  "modules": [
+    "brand",
+    "accounts",
+    "devex",
+    "deploy",
+    "ci",
+    "mcp",
+    "skills",
+    "agents",
+    "a2ui",
+    "platform"
+  ],
+  "reviewed": {
+    "platforms": "2026-11-08"
+  }
+}

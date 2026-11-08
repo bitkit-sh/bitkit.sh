@@ -1,0 +1,19 @@
+{
+  "name": "coopers-coffee",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cf dev",
+    "build": "cf build",
+    "types": "cf workers types",
+    "typecheck": "cf workers types && tsc --noEmit",
+    "deploy": "cf deploy",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "cf": "latest",
+    "vite": "8.3.5",
+    "@cloudflare/vite-plugin": "2.0.0-beta.v.4",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "bitkit brand",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/mise:1": {}
+  },
+  "postCreateCommand": "mise trust && mise install && just setup",
+  "forwardPorts": [
+    8787
+  ]
+}
