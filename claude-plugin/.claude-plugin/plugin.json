@@ -1,0 +1,8 @@
+{
+  "name": "bitkit",
+  "version": "0.1.0",
+  "description": "Build your brand's design system in Claude from your bitkit kit, then hand it back to bitkit to publish.",
+  "author": { "name": "bitkit", "url": "https://www.bitkit.sh" },
+  "homepage": "https://www.bitkit.sh",
+  "keywords": ["brand", "design-system", "cloudflare"]
+}

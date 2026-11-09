@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "bitkit": { "type": "http", "url": "https://app.bitkit.sh/mcp" }
+  }
+}

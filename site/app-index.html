@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>bitkit · identity kit builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link id="brand-fonts" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --paper: #edeff3;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --ink: #16181d;
+  --muted: #5b6270;
+  --line: #d5d9e0;
+  --wax: #8e1b2e;
+  --wax-ink: #ffffff;
+  --ok: #1f7a4d;
+  --warn: #a35a00;
+  --bad: #b3261e;
+  --focus: #2f5bff;
+  --radius-lg: 18px;
+  --radius-sm: 8px;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Hanken Grotesk", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #121418; --surface: #1b1e24; --surface-2: #22262d; --ink: #e8eaee;
+    --muted: #a0a7b4; --line: #333843; --wax: #e0566e; --wax-ink: #1a0a0e;
+    --ok: #5cc690; --warn: #f0a640; --bad: #ff7b72; --focus: #8aa4ff;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #121418; --surface: #1b1e24; --surface-2: #22262d; --ink: #e8eaee;
+  --muted: #a0a7b4; --line: #333843; --wax: #e0566e; --wax-ink: #1a0a0e;
+  --ok: #5cc690; --warn: #f0a640; --bad: #ff7b72; --focus: #8aa4ff;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); display: flex; align-items: center; gap: 14px; padding: 14px clamp(14px, 3vw, 28px); border-bottom: 1px solid var(--line); }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 1.25rem; letter-spacing: -0.01em; }
+.logo svg { width: 30px; height: 30px; }
+.top .spacer { flex: 1; }
+.top .hint { color: var(--muted); font-size: 0.85rem; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; }
+
+.shell { display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(320px, 420px); gap: clamp(14px, 2vw, 24px); padding: clamp(14px, 3vw, 28px); max-width: 1440px; margin: 0 auto; }
+.steps { position: sticky; top: 84px; align-self: start; display: flex; flex-direction: column; gap: 4px; }
+.step { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); border: 0; background: none; text-align: left; cursor: pointer; color: var(--muted); }
+.step .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); font-size: 0.8rem; font-weight: 600; }
+.step[aria-current="step"] { color: var(--ink); background: var(--surface); }
+.step[aria-current="step"] .n { background: var(--wax); border-color: var(--wax); color: var(--wax-ink); }
+.step.done .n { border-color: var(--ok); color: var(--ok); }
+.step b { font-weight: 600; display: block; }
+.step small { display: block; font-size: 0.78rem; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(18px, 3vw, 32px); min-width: 0; }
+.panel h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 3vw, 2.3rem); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 6px; }
+.panel .lede { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
+.panel h2 { font-family: var(--display); font-weight: 600; font-size: 1.1rem; margin: 28px 0 10px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label, .lbl { font-weight: 600; font-size: 0.9rem; }
+.field .help { color: var(--muted); font-size: 0.82rem; }
+input[type="text"], input[type="url"], select, textarea { width: 100%; border: 1px solid var(--line); background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; }
+textarea { min-height: 96px; resize: vertical; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 0.9rem; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip .x { margin-left: 6px; opacity: 0.6; }
+.btn { border: 1px solid var(--ink); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.wax { background: var(--wax); border-color: var(--wax); color: var(--wax-ink); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td input[type="text"] { padding: 6px 8px; min-width: 140px; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+.status { font-weight: 600; }
+
+.groups { display: grid; gap: 18px; }
+.plat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.plat { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: start; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; background: var(--surface-2); }
+.plat input { margin-top: 4px; accent-color: var(--wax); }
+.plat b { font-weight: 600; }
+.plat small { grid-column: 2; color: var(--muted); font-size: 0.78rem; }
+.plat:has(input:checked) { border-color: var(--ink); background: var(--surface); }
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.swatch { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-2); }
+.swatch .well { height: 64px; position: relative; }
+.swatch input[type="color"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.swatch .meta { padding: 8px 10px; display: flex; justify-content: space-between; gap: 6px; font-size: 0.85rem; }
+.swatch .meta input { width: 84px; padding: 2px 6px; font-size: 0.82rem; font-family: ui-monospace, monospace; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.contrast { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; font-size: 0.85rem; }
+.contrast span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+input[type="range"] { width: 100%; accent-color: var(--wax); }
+.slider-row { display: grid; grid-template-columns: 110px 1fr 110px; gap: 10px; align-items: center; font-size: 0.85rem; color: var(--muted); }
+.slider-row span:last-child { text-align: right; }
+.list-edit { display: flex; gap: 8px; }
+.list-edit input { flex: 1; }
+.counter { font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.counter span { border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+.files { list-style: none; padding: 0; margin: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.files li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+.files li:last-child { border-bottom: 0; }
+.files code { font-family: ui-monospace, monospace; font-size: 0.85rem; }
+.files .muted { color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+pre.json { max-height: 280px; overflow: auto; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; font-size: 0.78rem; }
+.toast { min-height: 1.5em; margin-top: 10px; font-size: 0.88rem; }
+.problems { margin: 12px 0 0; padding-left: 18px; color: var(--bad); font-size: 0.88rem; }
+
+/* preview */
+.preview { position: sticky; top: 84px; align-self: start; display: flex; flex-direction: column; gap: 12px; }
+.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.tabs button { flex: 1; border: 0; background: none; padding: 7px 10px; border-radius: 999px; cursor: pointer; color: var(--muted); font-weight: 600; font-size: 0.88rem; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--surface); }
+.specimen { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--line); }
+.spec-hero { padding: 28px 24px 22px; display: grid; justify-items: start; gap: 14px; }
+.spec-hero .mark { width: 112px; height: 112px; }
+.spec-name { font-size: 2rem; line-height: 1.05; margin: 0; letter-spacing: -0.02em; }
+.spec-tag { margin: 0; opacity: 0.8; }
+.spec-body { padding: 18px 24px 24px; display: grid; gap: 16px; }
+.spec-chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.spec-chips div { aspect-ratio: 3 / 4; border-radius: 8px; display: flex; align-items: flex-end; padding: 6px; font-size: 0.68rem; border: 1px solid rgba(0,0,0,0.08); }
+.spec-type p { margin: 0; }
+.spec-btn { justify-self: start; border: 0; padding: 10px 16px; font-weight: 600; }
+.profiles { display: grid; gap: 10px; max-height: 70vh; overflow: auto; }
+.profile { display: grid; grid-template-columns: 48px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; }
+.profile .mark { width: 48px; height: 48px; }
+.profile b { display: block; }
+.profile .handle { color: var(--muted); font-size: 0.85rem; }
+.profile p { margin: 6px 0 0; font-size: 0.85rem; overflow-wrap: anywhere; }
+.profile .src { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.empty { color: var(--muted); font-size: 0.9rem; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 16px; }
+
+@media (max-width: 1100px) {
+  .shell { grid-template-columns: 1fr; }
+  .steps { position: static; flex-direction: row; overflow-x: auto; }
+  .step { grid-template-columns: 26px auto; white-space: nowrap; }
+  .step small { display: none; }
+  .preview { position: static; }
+  .top .hint { display: none; }
+}
+.chip .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.help { color: var(--muted); font-size: .82rem; }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .86em; }
+details { margin-top: 10px; } details summary { cursor: pointer; font-weight: 600; }
+.slider-row { margin-bottom: 12px; }
+label.btn { display: inline-block; }
+.org, .org ul { list-style: none; margin: 0; padding: 0; }
+.org ul { margin-left: 14px; padding-left: 14px; border-left: 2px solid var(--line); }
+.org li { padding: 6px 0; }
+.claude-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px 16px; display: grid; gap: 8px; }
+.claude-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.claude-card b { font-family: var(--display); font-size: 1rem; }
+.claude-card .sync { font-size: .78rem; color: var(--muted); }
+.claude-card textarea { min-height: 64px; }
+.claude-card .row2 { display: flex; gap: 8px; align-items: center; }
+#ask-status { font-size: .85rem; min-height: 1.2em; margin: 0; }
+.files-pane { display: grid; grid-template-rows: minmax(140px, 34vh) minmax(200px, 1fr); gap: 8px; max-height: 76vh; }
+.tree { overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px; display: flex; flex-direction: column; }
+.tree button { text-align: left; border: 0; background: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; font-size: .84rem; }
+.tree button .dir { color: var(--muted); font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree button[aria-selected="true"] { background: var(--ink); color: var(--surface); }
+.tree button[aria-selected="true"] .dir { color: inherit; opacity: .7; }
+.viewer { min-height: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.viewer-head { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.viewer pre { margin: 0; padding: 10px; overflow: auto; font-size: .76rem; line-height: 1.45; flex: 1; }
+.spec-btn { display: inline-block; padding: 10px 16px; font-weight: 600; }
+pre.cmd { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; font-size: .8rem; overflow-x: auto; }
+@media (max-width: 1100px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .steps, .panel, .preview { min-width: 0; }
+  .steps { scrollbar-width: none; padding-bottom: 2px; }
+  .steps::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 560px) {
+  .panel { padding: 18px 16px; border-radius: 14px; }
+  .slider-row { grid-template-columns: 76px 1fr 76px; }
+  .nav { position: sticky; bottom: env(safe-area-inset-bottom, 0px); background: var(--surface); margin: 24px -16px -18px; padding: 12px 16px; border-radius: 0 0 14px 14px; }
+  .nav .btn { flex: 1; }
+  .swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .files-pane { grid-template-rows: minmax(140px, 30vh) minmax(240px, 55vh); }
+}
+#panel { scroll-margin-top: 84px; }
+.spec-chips { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.spec-chips div { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#ask-status:empty { display: none; }
+.dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px; border:1px solid var(--line); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><span id="app-mark"></span>bitkit</div>
+  <span class="hint">identity kit builder · you create every account; bitkit prepares the rest</span>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch color theme">Theme</button>
+</header>
+<div class="shell">
+  <nav class="steps" id="steps" aria-label="Kit steps"></nav>
+  <main class="panel" id="panel"></main>
+  <aside class="preview" aria-label="Claude and live preview">
+    <section class="claude-card" aria-label="Customize with Claude">
+      <header><b>Customize with Claude</b><span class="sync" data-region="sync">This browser only</span></header>
+      <div id="ask-box" hidden>
+        <label class="lbl" for="ask">Describe a change</label>
+        <textarea id="ask" placeholder="Make the palette warmer, add Bluesky and YouTube, and use the full agent team"></textarea>
+        <div class="row2"><button class="btn" type="button" id="ask-btn">Apply with Claude</button><span class="help">⌘/Ctrl + Enter</span></div>
+      </div>
+      <p id="ask-status" role="status"></p>
+      <p class="help" style="margin:0">You can also ask in the chat beside this page; Claude edits this same kit and the builder updates.</p>
+    </section>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-book" aria-selected="true" type="button">Brand book</button>
+      <button role="tab" id="tab-prof" aria-selected="false" type="button">Profiles</button>
+      <button role="tab" id="tab-files" aria-selected="false" type="button">Files</button>
+    </div>
+    <div id="preview"></div>
+  </aside>
+</div>
+<script id="bitkit-gen">
+"use strict";
+/* bitkit generator: pure functions from a draft kit to a file map. No DOM access, so it runs in the page, in Bun, and in tests. */
+const BITKIT = (() => {
+  const REVIEWED = "2026-11-08";
+  const V = { wrangler: "4.152.0", oxlint: "1.89.0", biome: "2.6.3", vitest: "4.1.12", poolWorkers: "0.23.0", lefthook: "2.2.2", paperclip: "2026.1023.0", bun: "1.4", node: "26", compat: "2026-11-08", cf: "latest", vite: "8.3.5", vitePlugin: "2.0.0-beta.v.4", typescript: "7.0.2",
+    actions: { checkout: "actions/checkout@v7", bun: "oven-sh/setup-bun@v2", wrangler: "cloudflare/wrangler-action@v4", mise: "jdx/mise-action@v5", node: "actions/setup-node@v7" } };
+
+  const PLATFORMS = [
+    { id: "instagram", name: "Instagram", group: "Social", min: 1, max: 30, pattern: /^[a-z0-9._]+$/, rule: "lowercase letters, numbers, periods, underscores", bio: 150, avatar: "320×320", banner: null, url: "https://instagram.com/{h}", signup: "https://www.instagram.com/accounts/emailsignup/" },
+    { id: "threads", name: "Threads", group: "Social", min: 1, max: 30, pattern: /^[a-z0-9._]+$/, rule: "same as Instagram", bio: 150, avatar: "320×320", banner: null, url: "https://threads.net/@{h}", signup: "https://www.threads.net/" },
+    { id: "x", name: "X", group: "Social", min: 4, max: 15, pattern: /^[A-Za-z0-9_]+$/, rule: "letters, numbers, underscores", bio: 160, avatar: "400×400", banner: "1500×500", url: "https://x.com/{h}", signup: "https://x.com/i/flow/signup" },
+    { id: "tiktok", name: "TikTok", group: "Social", min: 2, max: 24, pattern: /^[a-z0-9._]+$/, rule: "lowercase letters, numbers, periods, underscores", bio: 80, avatar: "200×200", banner: null, url: "https://tiktok.com/@{h}", signup: "https://www.tiktok.com/signup" },
+    { id: "bluesky", name: "Bluesky", group: "Social", min: 3, max: 18, pattern: /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/, rule: "lowercase letters, numbers, inner hyphens (.bsky.social)", bio: 256, avatar: "1000×1000", banner: "3000×1000", url: "https://bsky.app/profile/{h}.bsky.social", signup: "https://bsky.app/" },
+    { id: "facebook", name: "Facebook Page", group: "Social", min: 5, max: 50, pattern: /^[A-Za-z0-9.]+$/, rule: "letters, numbers, periods", bio: 255, avatar: "320×320", banner: "851×315", url: "https://facebook.com/{h}", signup: "https://www.facebook.com/pages/create" },
+    { id: "mastodon", name: "Mastodon", group: "Social", min: 1, max: 30, pattern: /^[A-Za-z0-9_]+$/, rule: "letters, numbers, underscores", bio: 500, avatar: "400×400", banner: "1500×500", url: "https://mastodon.social/@{h}", signup: "https://joinmastodon.org/servers" },
+    { id: "reddit", name: "Reddit", group: "Social", min: 3, max: 20, pattern: /^[A-Za-z0-9_-]+$/, rule: "letters, numbers, underscores, hyphens", bio: 200, avatar: "256×256", banner: "1920×384", url: "https://reddit.com/user/{h}", signup: "https://www.reddit.com/register/" },
+    { id: "linkedin", name: "LinkedIn Page", group: "Professional", min: 2, max: 100, pattern: /^[a-z0-9-]+$/, rule: "lowercase letters, numbers, hyphens", bio: 120, avatar: "400×400", banner: "1128×191", url: "https://linkedin.com/company/{h}", signup: "https://www.linkedin.com/company/setup/new/" },
+    { id: "youtube", name: "YouTube", group: "Creator", min: 3, max: 30, pattern: /^[A-Za-z0-9._-]+$/, rule: "letters, numbers, periods, underscores, hyphens", bio: 1000, avatar: "800×800", banner: "2560×1440", url: "https://youtube.com/@{h}", signup: "https://www.youtube.com/create_channel" },
+    { id: "twitch", name: "Twitch", group: "Creator", min: 4, max: 25, pattern: /^[a-z0-9_]+$/, rule: "lowercase letters, numbers, underscores", bio: 300, avatar: "256×256", banner: "1200×480", url: "https://twitch.tv/{h}", signup: "https://www.twitch.tv/signup" },
+    { id: "pinterest", name: "Pinterest", group: "Creator", min: 3, max: 30, pattern: /^[A-Za-z0-9_]+$/, rule: "letters, numbers, underscores", bio: 500, avatar: "280×280", banner: "1600×900", url: "https://pinterest.com/{h}", signup: "https://www.pinterest.com/business/create/" },
+    { id: "github", name: "GitHub", group: "Developer", min: 1, max: 39, pattern: /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/, rule: "letters, numbers, inner hyphens", bio: 160, avatar: "500×500", banner: null, url: "https://github.com/{h}", signup: "https://github.com/account/organizations/new" },
+    { id: "etsy", name: "Etsy shop", group: "Commerce", min: 4, max: 20, pattern: /^[A-Za-z0-9]+$/, rule: "letters and numbers only", bio: 55, avatar: "500×500", banner: "3360×840", url: "https://etsy.com/shop/{h}", signup: "https://www.etsy.com/sell" }
+  ];
+  const GROUPS = ["Social", "Professional", "Creator", "Developer", "Commerce"];
+  const FONTS = [
+    ["Bricolage Grotesque", "system-ui, sans-serif"], ["Fraunces", "Georgia, serif"], ["Instrument Serif", "Georgia, serif"], ["DM Serif Display", "Georgia, serif"],
+    ["Syne", "system-ui, sans-serif"], ["Archivo", "system-ui, sans-serif"], ["Space Grotesk", "system-ui, sans-serif"], ["Hanken Grotesk", "system-ui, sans-serif"],
+    ["IBM Plex Sans", "system-ui, sans-serif"], ["Work Sans", "system-ui, sans-serif"], ["Source Serif 4", "Georgia, serif"], ["Literata", "Georgia, serif"],
+    ["Manrope", "system-ui, sans-serif"], ["Atkinson Hyperlegible", "system-ui, sans-serif"]
+  ].map(([name, fb]) => ({ name, fb }));
+  const PRESETS = [
+    { name: "Sealing wax", primary: "#8e1b2e", secondary: "#2b3a55", accent: "#e8b54a", ink: "#17161a", paper: "#f7f4f0" },
+    { name: "Juniper", primary: "#2f5d50", secondary: "#a8c3a0", accent: "#e07a3f", ink: "#1b2420", paper: "#f3f5f0" },
+    { name: "Harbor", primary: "#1f4e79", secondary: "#88b4d8", accent: "#f2c14e", ink: "#0f1b2a", paper: "#f2f5f9" },
+    { name: "Ember", primary: "#c2410c", secondary: "#3f3a36", accent: "#facc15", ink: "#1c1917", paper: "#fbf7f2" },
+    { name: "Orchid", primary: "#6d28d9", secondary: "#f0abfc", accent: "#22d3ee", ink: "#1e1b2e", paper: "#f8f7fc" }
+  ];
+  const CATEGORIES = ["Bakery & food", "Coffee & café", "Studio & agency", "Retail shop", "Software", "Wellness", "Creator", "Nonprofit", "Trades & services", "Other"];
+
+  const MCP = [
+    { id: "cloudflare-docs", name: "Cloudflare docs", url: "https://docs.mcp.cloudflare.com/mcp", why: "Answers from current Cloudflare documentation" },
+    { id: "cloudflare-bindings", name: "Cloudflare bindings", url: "https://bindings.mcp.cloudflare.com/mcp", why: "Workers, KV, R2, D1 in your account" },
+    { id: "cloudflare-builds", name: "Cloudflare builds", url: "https://builds.mcp.cloudflare.com/mcp", why: "Workers build logs" },
+    { id: "cloudflare-observability", name: "Cloudflare observability", url: "https://observability.mcp.cloudflare.com/mcp", why: "Worker logs and metrics" },
+    { id: "github", name: "GitHub", url: "https://api.githubcopilot.com/mcp", why: "Issues, pull requests, Actions runs" },
+    { id: "context7", name: "Context7", url: "https://mcp.context7.com/mcp", why: "Current library docs" },
+    { id: "mdn", name: "MDN", url: "https://mcp.mdn.mozilla.net", why: "Web platform reference" },
+    { id: "figma", name: "Figma", url: "https://mcp.figma.com/mcp", why: "Design files and variables" }
+  ];
+  const SERVICES = [
+    { id: "kv", name: "KV", binding: "CACHE", helper: "bindings.kv()", why: "Menu and page cache" },
+    { id: "d1", name: "D1", binding: "DB", helper: `bindings.d1({ name: "${"{slug}"}-db" })`, why: "SQLite: orders, loyalty, forms" },
+    { id: "r2", name: "R2", binding: "MEDIA", helper: `bindings.r2({ name: "${"{slug}"}-media" })`, why: "Photos and downloads" },
+    { id: "queue", name: "Queues", binding: "JOBS", helper: `bindings.queue({ name: "${"{slug}"}-jobs" })`, why: "Background jobs" },
+    { id: "ai", name: "Workers AI", binding: "AI", helper: "bindings.ai()", why: "Menu copy, alt text, search" },
+    { id: "vectorize", name: "Vectorize", binding: "VECTORS", helper: `bindings.vectorize({ name: "${"{slug}"}-index" })`, why: "Semantic search over content" },
+    { id: "images", name: "Images", binding: "IMAGES", helper: "bindings.images()", why: "Resize and transform photos" },
+    { id: "browser", name: "Browser Run", binding: "BROWSER", helper: "bindings.browser()", why: "Screenshots and PDFs" },
+    { id: "analytics", name: "Analytics Engine", binding: "EVENTS", helper: "bindings.analyticsEngineDataset()", why: "Visit and order events" },
+    { id: "email", name: "Send Email", binding: "MAILER", helper: "bindings.sendEmail()", why: "Order and contact emails" },
+    { id: "ratelimit", name: "Rate limiting", binding: "LIMITER", helper: `bindings.rateLimit({ namespace: "1001", simple: { limit: 60, period: 60 } })`, why: "Protect forms and APIs" },
+    { id: "loader", name: "Dynamic Workers", binding: "LOADER", helper: "bindings.workerLoader()", why: "Run generated code in isolates on demand" }
+  ];
+  const HOSTING = [
+    { id: "handoff", name: "Hand off", why: "Preview on a temporary account; the owner claims it and owns everything" },
+    { id: "platform", name: "bitkit platform", why: "Runs in bitkit’s account as a Workers for Platforms tenant" },
+    { id: "connect", name: "Owner’s account", why: "Deployed into the owner’s own account after they connect it" }
+  ];
+  const WORKFLOWS = [
+    { id: "ci", name: "Check", why: "Lint, format, kit validation, tests on every push" },
+    { id: "deploy", name: "Deploy", why: "Deploys the brand site from main" },
+    { id: "preview", name: "Pull request build", why: "Runs cf build on every pull request" },
+    { id: "actions-audit", name: "Workflow audit", why: "Lints workflows with actionlint and zizmor" }
+  ];
+  const SKILLS = [
+    { id: "brand-voice", name: "Brand voice", why: "Writes copy in the kit’s voice and bio limits" },
+    { id: "brand-tokens", name: "Brand tokens", why: "Applies palette, type, radius from tokens.css" },
+    { id: "kit-editor", name: "Kit editor", why: "Edits bitkit.kit.json and regenerates the bundle" },
+    { id: "account-launch", name: "Account launch prep", why: "Prepares profile sheets; you create the accounts" },
+    { id: "cf-preview-claim", name: "Preview and claim", why: "Temporary Cloudflare previews with safe claim links" },
+    { id: "domain-search", name: "Domain search", why: "Finds and checks domains with cf; the owner registers" }
+  ];
+  const DEVEX = [
+    { id: "mise", name: "mise", why: "Pins bun, node, just, lefthook" },
+    { id: "just", name: "just", why: "One task runner: check, dev, preview, deploy" },
+    { id: "lefthook", name: "lefthook", why: "Pre-commit lint and kit validation" },
+    { id: "oxlint", name: "oxlint", why: "Lint" },
+    { id: "biome", name: "Biome", why: "Format and lint" },
+    { id: "editorconfig", name: "EditorConfig", why: "Shared whitespace rules" },
+    { id: "devcontainer", name: "Dev container", why: "Reproducible workspace with mise" },
+    { id: "vitest", name: "Vitest", why: "Wired beside bun test" }
+  ];
+  const MODULES = [
+    { id: "brand", name: "Brand kit", why: "Brand book, guide, tokens, mark, profile sheets", locked: true },
+    { id: "accounts", name: "Account checklist", why: "ACCOUNTS.md: what you sign up for, in order" },
+    { id: "devex", name: "Dev experience", why: "Tooling and editor config" },
+    { id: "deploy", name: "Cloudflare project", why: "cloudflare.config.ts, Worker, Vite, domain and preview scripts" },
+    { id: "platform", name: "Cloudflare for Platforms", why: "platform/: dispatcher, Dynamic Workers, tenant provisioning" },
+    { id: "ci", name: "GitHub Actions", why: "Workflows you picked" },
+    { id: "mcp", name: "MCP config", why: ".mcp.json for Claude Code and other clients" },
+    { id: "skills", name: "Agent skills", why: ".claude/skills generated from the kit" },
+    { id: "agents", name: "Paperclip company", why: "company/ in agentcompanies/v1 format" },
+    { id: "design-system", name: "Claude Design System", why: "design-system/project/: tokens, brand book, components for Claude" },
+    { id: "a2ui", name: "A2UI wizard", why: "The same wizard as an A2UI v0.9 surface" }
+  ];
+  const ROLES = [
+    { slug: "director", name: "Studio Director", title: "Chief Executive Officer", role: "ceo", icon: "crown", reportsTo: null, team: null, sizes: ["lean", "full"], model: "opus",
+      job: "Owns the company goal, sets priorities across teams, and is the only agent that opens approval requests to the board.", triggers: "A new kit version, a blocked issue, a weekly review routine.", does: "Turns the kit into quarterly goals, sequences projects, reviews what each team ships.", produces: "Weekly status note, project priorities, approval requests.", handoff: "Brand Lead for identity work, CTO for platform work, Delivery Lead for launch work." },
+    { slug: "brand-lead", name: "Brand Lead", title: "Creative Director", role: "cmo", icon: "gem", reportsTo: "director", team: "creative", sizes: ["lean", "full"], model: "sonnet", skills: ["brand-voice", "brand-tokens", "kit-editor"],
+      job: "Owns bitkit.kit.json as the source of truth for name, palette, type, mark, and voice.", triggers: "Brand changes requested by the board, contrast or consistency findings.", does: "Edits the kit, runs regeneration, reviews every generated surface against the kit.", produces: "Kit changes with a short rationale, brand review notes.", handoff: "Identity Designer for marks and assets, Copywriter for words." },
+    { slug: "identity-designer", name: "Identity Designer", title: "Visual Identity Designer", role: "designer", icon: "wand", reportsTo: "brand-lead", team: "creative", sizes: ["full"], model: "sonnet", skills: ["brand-tokens"],
+      job: "Produces the mark, avatar, and banner assets at each platform’s sizes from the kit.", triggers: "Mark or palette changes, a new platform in the kit.", does: "Exports assets, checks contrast at small sizes, keeps assets/ in sync with tokens.", produces: "Asset files and a size table per platform.", handoff: "Brand Lead for approval." },
+    { slug: "copywriter", name: "Copywriter", title: "Brand Copywriter", role: "general", icon: "message-square", reportsTo: "brand-lead", team: "creative", sizes: ["full"], model: "sonnet", skills: ["brand-voice", "account-launch"],
+      job: "Writes bios, taglines, and first posts in the kit’s voice within each platform’s limits.", triggers: "Voice changes, new platforms, launch preparation.", does: "Drafts per-platform bios and launch copy, checks limits, flags conflicts with the do and avoid lists.", produces: "Copy in platforms/*.md and a launch copy doc.", handoff: "Brand Lead for review, Delivery Lead for launch." },
+    { slug: "cto", name: "CTO", title: "Chief Technology Officer", role: "cto", icon: "cpu", reportsTo: "director", team: "engineering", sizes: ["full"], model: "opus", skills: ["kit-editor", "cf-preview-claim"],
+      job: "Owns the repository, the generator, CI, and the Cloudflare deployment path.", triggers: "Failing checks, dependency or Action updates, deploy requests.", does: "Reviews engineering changes, keeps pins current, approves workflow changes.", produces: "Reviewed pull requests, upgrade plans.", handoff: "Platform Engineer for implementation, QA for verification." },
+    { slug: "platform-engineer", name: "Platform Engineer", title: "Platform Engineer", role: "engineer", icon: "code", reportsTo: "cto", team: "engineering", sizes: ["lean", "full"], model: "sonnet", skills: ["kit-editor", "brand-tokens", "cf-preview-claim"],
+      job: "Builds the brand site, scripts, and workflows generated from the kit.", triggers: "Issues in the web-presence and dev-platform projects.", does: "Implements changes with bun test and Vitest, runs just check, opens pull requests.", produces: "Pull requests with passing checks.", handoff: "QA Engineer, then CTO." },
+    { slug: "edge-devops", name: "Edge DevOps", title: "Edge Deploy Engineer", role: "devops", icon: "globe", reportsTo: "cto", team: "engineering", sizes: ["full"], model: "sonnet", skills: ["cf-preview-claim"],
+      job: "Runs temporary previews and owns wrangler.jsonc, deploy scripts, and the deploy workflow.", triggers: "Preview requests, deploy workflow failures.", does: "Deploys previews with wrangler deploy --temporary from an isolated config directory, verifies them, hands the claim link only to the brand owner.", produces: "Preview URLs and a deploy log without credentials.", handoff: "Delivery Lead for the claim handoff." },
+    { slug: "qa", name: "QA Engineer", title: "QA Engineer", role: "qa", icon: "bug", reportsTo: "cto", team: "engineering", sizes: ["full"], model: "sonnet",
+      job: "Verifies every generated surface: brand book offline render, contrast, handle rules, bio limits.", triggers: "Pull requests, kit changes.", does: "Runs the kit validator and visual checks, files evidence-backed findings.", produces: "Pass or fail verdicts with evidence.", handoff: "Author of the change." },
+    { slug: "delivery-lead", name: "Delivery Lead", title: "Launch and Delivery Lead", role: "pm", icon: "rocket", reportsTo: "director", team: "delivery", sizes: ["lean", "full"], model: "sonnet", skills: ["account-launch"],
+      job: "Prepares the launch: ACCOUNTS.md, profile sheets, and the order in which the owner creates accounts.", triggers: "Kit ready for launch, new platform selected.", does: "Builds the checklist, confirms every field is ready to paste, tracks which accounts the owner reports as created.", produces: "An up-to-date ACCOUNTS.md and a launch status note.", handoff: "The board, who creates every account personally." },
+    { slug: "security", name: "Security Lead", title: "Security and Trust", role: "security", icon: "shield", reportsTo: "director", team: "delivery", sizes: ["full"], model: "sonnet", skills: ["cf-preview-claim"],
+      job: "Guards credentials and supply chain: claim links, tokens, Action pins, dependency scores.", triggers: "New dependencies, workflow edits, preview handoffs.", does: "Reviews pins and permissions, checks that claim links and tokens never reach issues or logs.", produces: "Findings with severity and a fix.", handoff: "CTO for remediation." }
+  ];
+
+  /* ---------- helpers ---------- */
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const slugify = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, "").replace(/&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const compact = (s) => slugify(s).replace(/-/g, "");
+  const font = (n) => { const f = FONTS.find((x) => x.name === n); return `"${n}", ${f ? f.fb : "system-ui, sans-serif"}`; };
+  const validHex = (h) => /^#[0-9a-fA-F]{6}$/.test(h || "");
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const lum = (h) => rgb(h).map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const mix = (a, b, t) => "#" + rgb(a).map((c, i) => Math.round(c + (rgb(b)[i] - c) * t).toString(16).padStart(2, "0")).join("");
+  const onColor = (bg) => (contrast(bg, "#ffffff") >= contrast(bg, "#111111") ? "#ffffff" : "#111111");
+  const trimBio = (b, n) => { if (b.length <= n) return b; const cut = b.slice(0, n - 1); const sp = cut.lastIndexOf(" "); return (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,.;:]+$/, "") + "…"; };
+  const checkHandle = (p, h) => !h ? { ok: false, msg: "Empty" } : h.length < p.min ? { ok: false, msg: `Min ${p.min} characters` } : h.length > p.max ? { ok: false, msg: `Max ${p.max} characters (${h.length})` } : !p.pattern.test(h) ? { ok: false, msg: `Allowed: ${p.rule}` } : { ok: true, msg: "Fits" };
+  const yamlStr = (s) => JSON.stringify(String(s ?? ""));
+  const GH = (expr) => "${{ " + expr + " }}";
+  const fence = (lang, body) => "```" + lang + "\n" + body + "\n```";
+
+  function blank() {
+    return {
+      schema: "bitkit.kit/v1",
+      brand: { name: "Cooper’s Coffee", slug: "coopers-coffee", tagline: "Small-batch coffee, roasted down the street.", category: "Coffee & café", keywords: ["coffee", "roastery", "neighborhood"] },
+      handle: { primary: "cooperscoffee", overrides: {} },
+      platforms: ["instagram", "tiktok", "facebook", "threads", "youtube"],
+      palette: { primary: "#5a3a22", secondary: "#c9a27e", accent: "#2f6f5e", ink: "#1f1611", paper: "#faf6f1" },
+      type: { heading: "DM Serif Display", body: "Work Sans", scale: 1.25 }, shape: { radius: 10 }, mark: { kind: "circle", glyphs: "C" },
+      voice: { formality: 0.6, playfulness: 0.5, boldness: 0.4, do: ["Name the origin and the roast date", "Greet regulars by their usual"], dont: ["Coffee puns in every post", "Discount-first language"], bio: "Small-batch coffee roasted in the back room and poured out front. Beans roasted Tuesday and Friday, open daily from 6.", bios: {} },
+      repo: { host: "github", owner: "coopers-coffee", name: "brand" },
+      deploy: { worker: "coopers-coffee", domain: "", preview: "temporary" },
+      domain: { query: "coopers coffee", results: [], checkedAt: "", account: "" },
+      services: ["kv", "d1", "r2", "ai", "analytics"],
+      hosting: { model: "platform", namespace: "bitkit-tenants", platformZone: "bitkit.sh" },
+      devex: ["mise", "just", "lefthook", "oxlint", "biome", "editorconfig", "devcontainer", "vitest"],
+      ci: ["ci", "deploy", "preview", "actions-audit"],
+      mcp: ["cloudflare-docs", "cloudflare-bindings", "cloudflare-observability", "github", "context7"],
+      skills: ["brand-voice", "brand-tokens", "kit-editor", "account-launch", "cf-preview-claim", "domain-search"],
+      agents: { purpose: "brand", size: "lean", budgetCents: 2500, timezone: "America/Chicago" },
+      publish: { id: "", setup: "", publishedAt: "" },
+      modules: MODULES.map((m) => m.id).filter((id) => id !== "platform")
+    };
+  }
+  // Fill any field a stored or imported draft lacks.
+  function normalize(d) {
+    const b = blank(), out = { ...b, ...d };
+    for (const k of ["brand", "handle", "palette", "type", "shape", "mark", "voice", "repo", "deploy", "domain", "hosting", "agents", "publish"]) out[k] = { ...b[k], ...(d?.[k] || {}) };
+    out.handle.overrides = { ...(out.handle.overrides || {}) }; out.voice.bios = { ...(out.voice.bios || {}) };
+    for (const k of ["platforms", "devex", "ci", "mcp", "skills", "services", "modules", "brand.keywords", "domain.results"]) {
+      const [a, c] = k.split("."); if (c) { if (!Array.isArray(out[a][c])) out[a][c] = b[a][c]; } else if (!Array.isArray(out[a])) out[a] = b[a];
+    }
+    if (!out.modules.includes("brand")) out.modules.unshift("brand");
+    out.schema = "bitkit.kit/v1";
+    return out;
+  }
+  const selected = (d) => PLATFORMS.filter((p) => d.platforms.includes(p.id));
+  const handleFor = (d, pid) => d.handle.overrides[pid] || d.handle.primary;
+  const bioFor = (d, pid) => d.voice.bios[pid] || d.voice.bio;
+  const darkPalette = (p) => ({ primary: mix(p.primary, "#ffffff", 0.25), secondary: mix(p.secondary, "#ffffff", 0.2), accent: p.accent, ink: mix(p.paper, "#ffffff", 0.4), paper: mix(p.ink, "#000000", 0.2) });
+
+  function candidates(d) {
+    const words = slugify(d.brand.name).split("-").filter(Boolean), base = words.join("");
+    const set = new Set([base, words.slice(0, 2).join(""), words.join("_"), words.join("."), base + "hq", "the" + base, "hello" + base,
+      words.map((w) => w[0]).join("") + (d.brand.keywords[0] ? compact(d.brand.keywords[0]) : "studio")]);
+    return [...set].filter((h) => h && h.length >= 2).slice(0, 8);
+  }
+  function problems(d) {
+    const out = [];
+    if (!d.brand.name.trim()) out.push("Add a brand name.");
+    if (!d.platforms.length) out.push("Pick at least one platform.");
+    for (const p of selected(d)) { const c = checkHandle(p, handleFor(d, p.id)); if (!c.ok) out.push(`${p.name} handle: ${c.msg}.`); }
+    for (const k of ["primary", "secondary", "accent", "ink", "paper"]) if (!validHex(d.palette[k])) out.push(`Palette ${k} needs a 6-digit hex value.`);
+    if (d.deploy.domain && !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(d.deploy.domain)) out.push("Domain must look like name.tld, lowercase.");
+    if ((d.modules.includes("deploy") || d.modules.includes("platform")) && !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(d.deploy.worker)) out.push("Worker name: lowercase letters, numbers, inner hyphens, 63 characters at most.");
+    if (d.modules.includes("ci") && (!d.repo.owner || !d.repo.name)) out.push("Add a repository owner and name for the workflows.");
+    return out;
+  }
+
+  function markSvg(d, size = 120) {
+    const p = d.palette, g = esc((d.mark.glyphs || "?").slice(0, 3)), fs = g.length > 2 ? 34 : g.length > 1 ? 42 : 54, fg = onColor(p.primary);
+    let shape;
+    if (d.mark.kind === "seal") {
+      const pts = []; for (let i = 0; i <= 72; i++) { const t = (i / 72) * Math.PI * 2, r = 56 + 3.2 * Math.cos(t * 18); pts.push(`${(60 + r * Math.cos(t)).toFixed(2)},${(60 + r * Math.sin(t)).toFixed(2)}`); }
+      shape = `<polygon points="${pts.join(" ")}" fill="${p.primary}"/><circle cx="60" cy="60" r="44" fill="none" stroke="${fg}" stroke-opacity="0.45" stroke-width="1.5"/>`;
+    } else if (d.mark.kind === "circle") shape = `<circle cx="60" cy="60" r="58" fill="${p.primary}"/>`;
+    else shape = `<rect x="2" y="2" width="116" height="116" rx="${Math.min(d.shape.radius * 1.5, 40)}" fill="${p.primary}"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}" role="img" aria-label="${esc(d.brand.name)} mark">${shape}<text x="60" y="61" text-anchor="middle" dominant-baseline="central" font-family='${font(d.type.heading).replace(/'/g, "")}' font-weight="700" font-size="${fs}" fill="${fg}" letter-spacing="-1">${g}</text></svg>`;
+  }
+
+  /* ---------- the exported kit ---------- */
+  function buildKit(d, now = new Date()) {
+    return {
+      $schema: "./schema/bitkit.kit.v1.json", schema: "bitkit.kit/v1", generatedAt: now.toISOString().replace(/\.\d{3}Z$/, "Z"),
+      brand: { ...d.brand, slug: d.brand.slug || slugify(d.brand.name) },
+      handle: { primary: d.handle.primary, candidates: candidates(d), overrides: { ...d.handle.overrides } },
+      platforms: selected(d).map((p) => ({ id: p.id, name: p.name, handle: handleFor(d, p.id), url: p.url.replace("{h}", handleFor(d, p.id)), signup: p.signup, bio: trimBio(bioFor(d, p.id), p.bio), bioLimit: p.bio, avatar: p.avatar, banner: p.banner })),
+      palette: { ...d.palette, dark: darkPalette(d.palette) }, type: { ...d.type }, shape: { ...d.shape }, mark: { ...d.mark, svg: markSvg(d, 512) },
+      voice: { formality: d.voice.formality, playfulness: d.voice.playfulness, boldness: d.voice.boldness, do: [...d.voice.do], dont: [...d.voice.dont], bio: d.voice.bio, bios: { ...d.voice.bios } },
+      repo: { ...d.repo }, deploy: { ...d.deploy }, domain: { ...d.domain, results: d.domain.results.map((r) => ({ ...r })) }, services: [...d.services], hosting: { ...d.hosting }, publish: { ...d.publish }, devex: [...d.devex], ci: [...d.ci], mcp: [...d.mcp], skills: [...d.skills], agents: { ...d.agents }, modules: [...d.modules],
+      reviewed: { platforms: REVIEWED }
+    };
+  }
+  const head = (k, kind) => `Generated by bitkit from bitkit.kit.json (schema ${k.schema}) at ${k.generatedAt}. Edit the JSON, not this ${kind}.`;
+  const S = (k) => k.brand.slug;
+  const pct = (x) => Math.round(x * 100);
+
+  function tokensCss(k) {
+    const v = (o, pad) => Object.entries(o).filter(([n]) => n !== "dark").map(([n, c]) => `${pad}--brand-${n}: ${c};`).join("\n");
+    return `/* ${head(k, "file")} */\n:root {\n${v(k.palette, "  ")}\n  --brand-font-heading: ${font(k.type.heading)};\n  --brand-font-body: ${font(k.type.body)};\n  --brand-radius: ${k.shape.radius}px;\n  --brand-scale: ${k.type.scale};\n}\n@media (prefers-color-scheme: dark) {\n  :root {\n${v(k.palette.dark, "    ")}\n  }\n}\n`;
+  }
+  function tokensJson(k) {
+    const col = (o) => Object.fromEntries(Object.entries(o).filter(([n]) => n !== "dark").map(([n, c]) => [n, { $type: "color", $value: c }]));
+    const fam = (n) => [n, ...(FONTS.find((f) => f.name === n)?.fb.split(", ") || [])];
+    return JSON.stringify({ $description: head(k, "file"), color: col(k.palette), "color-dark": col(k.palette.dark),
+      font: { heading: { $type: "fontFamily", $value: fam(k.type.heading) }, body: { $type: "fontFamily", $value: fam(k.type.body) } },
+      radius: { base: { $type: "dimension", $value: { value: k.shape.radius, unit: "px" } } } }, null, 2) + "\n";
+  }
+  function brandMd(k) {
+    return [`---`, `schema: ${k.schema}`, `source: ../bitkit.kit.json`, `generatedAt: ${k.generatedAt}`, `---`, ``, `# ${k.brand.name}`, ``, k.brand.tagline, ``, `## Identity`, ``,
+      `| Field | Value |`, `| --- | --- |`, `| Name | ${k.brand.name} |`, `| Slug | \`${k.brand.slug}\` |`, `| Category | ${k.brand.category} |`, `| Primary handle | @${k.handle.primary} |`, `| Keywords | ${k.brand.keywords.join(", ")} |`, ``,
+      `## Palette`, ``, `| Role | Light | Dark |`, `| --- | --- | --- |`, ...["primary", "secondary", "accent", "ink", "paper"].map((n) => `| ${n} | \`${k.palette[n]}\` | \`${k.palette.dark[n]}\` |`), ``,
+      `Ink on paper contrast: ${contrast(k.palette.ink, k.palette.paper).toFixed(2)}:1.`, ``,
+      `## Type`, ``, `- Headings: ${k.type.heading}`, `- Body: ${k.type.body}`, `- Scale ratio: ${k.type.scale}`, `- Corner radius: ${k.shape.radius}px`, ``,
+      `## Mark`, ``, `A ${k.mark.kind} monogram reading “${k.mark.glyphs}” in the primary color. File: \`assets/mark.svg\`.`, ``,
+      `## Voice`, ``, `- Formal ${100 - pct(k.voice.formality)}% / casual ${pct(k.voice.formality)}%`, `- Serious ${100 - pct(k.voice.playfulness)}% / playful ${pct(k.voice.playfulness)}%`, `- Reserved ${100 - pct(k.voice.boldness)}% / bold ${pct(k.voice.boldness)}%`, ``,
+      `**We say:** ${k.voice.do.join("; ") || "none listed"}`, ``, `**We avoid:** ${k.voice.dont.join("; ") || "none listed"}`, ``, `### Bio`, ``, `> ${k.voice.bio}`, ``,
+      `## Platforms`, ``, `| Platform | Handle | Profile |`, `| --- | --- | --- |`, ...k.platforms.map((p) => `| ${p.name} | @${p.handle} | ${p.url} |`), ``].join("\n");
+  }
+  function platformMd(k, p) {
+    const f = (t, v) => `## ${t}\n\n${fence("text", v)}\n`;
+    return [`---`, `platform: ${p.id}`, `source: ../../bitkit.kit.json`, `generatedAt: ${k.generatedAt}`, `---`, ``, `# ${p.name}: ${k.brand.name}`, ``,
+      f("Handle", p.handle), f("Profile URL", p.url), f("Display name", k.brand.name), f(`Bio (limit ${p.bioLimit})`, p.bio),
+      f("Link", k.deploy.domain ? `https://${k.deploy.domain}` : `https://${k.deploy.worker}.<your-subdomain>.workers.dev`),
+      `## Images`, ``, `| Asset | Size (px) | Source |`, `| --- | --- | --- |`, `| Avatar | ${p.avatar} | assets/mark.svg |`, ...(p.banner ? [`| Banner | ${p.banner} | brand book hero |`] : []), ``].join("\n");
+  }
+  function brandBook(k) {
+    const p = k.palette, d = p.dark;
+    return `<!doctype html>
+<${"!"}-- ${head(k, "page")} -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(k.brand.name)} · Brand book</title>
+<style>
+${tokensCss(k).replace(/^\/\*.*\*\/\n/, "")}
+*{box-sizing:border-box}body{margin:0;background:var(--brand-paper);color:var(--brand-ink);font-family:var(--brand-font-body);line-height:1.55}
+main{max-width:920px;margin:0 auto;padding:56px 24px 80px}
+header{display:grid;gap:18px;padding-bottom:40px;border-bottom:1px solid color-mix(in srgb,var(--brand-ink) 15%,transparent)}
+h1,h2{font-family:var(--brand-font-heading);letter-spacing:-.02em;line-height:1.1}
+h1{font-size:clamp(2.4rem,7vw,4.2rem);margin:0}h2{font-size:1.6rem;margin:48px 0 16px}
+.tag{font-size:1.2rem;opacity:.8;margin:0}.mark svg{width:140px;height:140px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sw{border-radius:var(--brand-radius);overflow:hidden;border:1px solid color-mix(in srgb,var(--brand-ink) 12%,transparent)}
+.sw div{height:110px}.sw p{margin:0;padding:10px 12px;font-size:.9rem}.sw code{font-family:ui-monospace,monospace;font-size:.85rem}
+.spec{font-family:var(--brand-font-heading);font-size:clamp(1.8rem,5vw,3rem);margin:0}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;border-bottom:1px solid color-mix(in srgb,var(--brand-ink) 12%,transparent)}
+.btn{display:inline-block;background:var(--brand-primary);color:${onColor(p.primary)};padding:12px 18px;border-radius:var(--brand-radius);text-decoration:none;font-weight:600}
+blockquote{margin:0;padding:16px 20px;border-left:4px solid var(--brand-accent);background:color-mix(in srgb,var(--brand-accent) 10%,transparent);border-radius:0 var(--brand-radius) var(--brand-radius) 0}
+footer{margin-top:64px;font-size:.85rem;opacity:.7}
+</style></head><body><main>
+<header><div class="mark">${markSvg(k, 140)}</div><h1>${esc(k.brand.name)}</h1><p class="tag">${esc(k.brand.tagline)}</p><div><a class="btn" href="${esc(k.platforms[0]?.url || "#")}">Find us @${esc(k.handle.primary)}</a></div></header>
+<h2>Palette</h2><div class="grid">${["primary", "secondary", "accent", "ink", "paper"].map((n) => `<div class="sw"><div style="background:${p[n]}"></div><p>${n}<br><code>${p[n]}</code> · dark <code>${d[n]}</code></p></div>`).join("")}</div>
+<h2>Type</h2><p class="spec">${esc(k.type.heading)} for headings</p><p>${esc(k.type.body)} sets the body. ${esc(k.voice.bio)}</p>
+<h2>Voice</h2><blockquote>${esc(k.voice.bio)}</blockquote>
+<div class="tw"><table><thead><tr><th>We say</th><th>We avoid</th></tr></thead><tbody>${Array.from({ length: Math.max(k.voice.do.length, k.voice.dont.length) }, (_, i) => `<tr><td>${esc(k.voice.do[i] || "")}</td><td>${esc(k.voice.dont[i] || "")}</td></tr>`).join("")}</tbody></table></div>
+<h2>Where to find us</h2><div class="tw"><table><thead><tr><th>Platform</th><th>Handle</th><th>Avatar</th><th>Banner</th></tr></thead><tbody>${k.platforms.map((x) => `<tr><td>${esc(x.name)}</td><td><a href="${esc(x.url)}">@${esc(x.handle)}</a></td><td>${x.avatar}</td><td>${x.banner || "none"}</td></tr>`).join("")}</tbody></table></div>
+<footer>Generated from bitkit.kit.json (${k.schema}) on ${k.generatedAt}.</footer>
+</main></body></html>
+`;
+  }
+
+  /* ---------- accounts: the owner creates every account ---------- */
+  function accountsMd(k) {
+    return [`# Accounts to create: ${k.brand.name}`, ``,
+      `You create each account yourself, signed in as the brand owner. Nothing in this bundle signs up for, logs in to, or posts on any platform. Each row links to the platform’s own sign-up page and to the profile sheet with every field ready to paste.`, ``,
+      `Platform rules were last reviewed ${k.reviewed.platforms}. Check each platform’s current rules as you go.`, ``,
+      `## Checklist`, ``,
+      ...k.platforms.map((p) => `- [ ] **${p.name}** as @${p.handle}: sign up at ${p.signup}, then fill the profile from [brand/platforms/${p.id}.md](brand/platforms/${p.id}.md)`), ``,
+      `## Domain`, ``, ...(k.domain.results.filter((r) => r.registrable).slice(0, 5).map((r) => `- [ ] ${r.name}: ${r.registration_cost ? `$${r.registration_cost} first year, $${r.renewal_cost} renewal` : "check price"} (checked ${k.domain.checkedAt || "not yet"})`)), ...(k.domain.results.length ? [] : [`- [ ] Run \`just domains\` to search`]), `- [ ] Register your pick yourself in your Cloudflare account, then set \`deploy.domain\` in the kit`, ``,
+      ...(k.modules.includes("deploy") ? [`## Cloudflare`, ``, `- [ ] Create or sign in to your Cloudflare account at https://dash.cloudflare.com/sign-up`, `- [ ] Optional: run \`just preview\` for a temporary preview, then claim it yourself within 60 minutes`, `- [ ] For CI deploys, create an API token scoped to Workers and add \`CLOUDFLARE_API_TOKEN\` and \`CLOUDFLARE_ACCOUNT_ID\` as repository secrets`, ``] : []),
+      ...(k.modules.includes("ci") ? [`## Repository`, ``, `- [ ] Create \`${k.repo.owner}/${k.repo.name}\` on GitHub and push this bundle`, ``] : []),
+      `## After each account exists`, ``, `Tell your agents which accounts are live by ticking the box above and committing. The Delivery Lead reads this file; agents never hold platform passwords.`, ``].join("\n");
+  }
+
+  /* ---------- dev experience ---------- */
+  const has = (k, list, id) => k[list].includes(id);
+  function devexFiles(k) {
+    const f = {};
+    if (has(k, "devex", "mise")) f["mise.toml"] = `# ${head(k, "file")}\n[tools]\nbun = "${V.bun}"\nnode = "${V.node}"\njust = "latest"\nlefthook = "${V.lefthook}"\n\n[settings]\nexperimental = true\n`;
+    if (has(k, "devex", "editorconfig")) f[".editorconfig"] = `root = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\nindent_style = space\nindent_size = 2\ninsert_final_newline = true\ntrim_trailing_whitespace = true\n\n[*.md]\ntrim_trailing_whitespace = false\n`;
+    if (has(k, "devex", "biome")) f["biome.json"] = JSON.stringify({ $schema: `https://biomejs.dev/schemas/${V.biome}/schema.json`, files: { includes: ["**", "!brand/index.html", "!company/**"] }, formatter: { indentStyle: "space", indentWidth: 2, lineWidth: 100 }, linter: { enabled: true, rules: { recommended: true } } }, null, 2) + "\n";
+    if (has(k, "devex", "oxlint")) f[".oxlintrc.json"] = JSON.stringify({ $schema: "./node_modules/oxlint/configuration_schema.json", categories: { correctness: "error", suspicious: "warn" }, ignorePatterns: ["brand/**", "company/**"] }, null, 2) + "\n";
+    if (has(k, "devex", "lefthook")) f["lefthook.yml"] = `# ${head(k, "file")}\npre-commit:\n  parallel: true\n  commands:\n    kit:\n      glob: "bitkit.kit.json"\n      run: bun scripts/validate-kit.ts\n${has(k, "devex", "oxlint") ? `    oxlint:\n      glob: "*.{ts,js}"\n      run: bunx oxlint@${V.oxlint} {staged_files}\n` : ""}${has(k, "devex", "biome") ? `    biome:\n      glob: "*.{ts,js,json}"\n      run: bunx @biomejs/biome@${V.biome} check --no-errors-on-unmatched {staged_files}\n` : ""}`;
+    if (has(k, "devex", "devcontainer")) f[".devcontainer/devcontainer.json"] = JSON.stringify({ name: `${k.brand.name} brand`, image: "mcr.microsoft.com/devcontainers/base:ubuntu", features: { "ghcr.io/devcontainers-extra/features/mise:1": {} }, postCreateCommand: "mise trust && mise install && just setup", forwardPorts: [8787] }, null, 2) + "\n";
+    if (has(k, "devex", "vitest")) {
+      f["vitest.config.ts"] = `// ${head(k, "file")}\nimport { defineConfig } from "vitest/config";\n\nexport default defineConfig({ test: { include: ["tests/**/*.test.ts"] } });\n`;
+    }
+    f["tests/kit.test.ts"] = `// Runs under bun test and Vitest.\nimport { expect, test } from "${has(k, "devex", "vitest") ? "vitest" : "bun:test"}";\nimport kit from "../bitkit.kit.json";\n\ntest("kit uses schema bitkit.kit/v1", () => {\n  expect(kit.schema).toBe("bitkit.kit/v1");\n});\n\ntest("every bio fits its platform", () => {\n  for (const p of kit.platforms) expect(p.bio.length).toBeLessThanOrEqual(p.bioLimit);\n});\n`;
+    f[".gitignore"] = `node_modules/\n.wrangler/\n.cloudflare/\n.tmp/\n.dev.vars\n.env*\n!.env.example\n`;
+    if (has(k, "devex", "just")) f["justfile"] = justfile(k);
+    return f;
+  }
+  function justfile(k) {
+    const L = [`# ${head(k, "file")}`, `set shell := ["sh", "-eu", "-c"]`, ``, `default:`, `    @just --list`, ``,
+      `# Install pinned tools and git hooks`, `setup:`, ...(has(k, "devex", "mise") ? [`    mise install`] : []), ...(has(k, "devex", "lefthook") ? [`    bunx lefthook@${V.lefthook} install`] : []), ``,
+      `# Lint, format check, kit validation, tests`, `check:`, `    bun scripts/validate-kit.ts`,
+      ...(has(k, "devex", "oxlint") ? [`    bunx oxlint@${V.oxlint} .`] : []), ...(has(k, "devex", "biome") ? [`    bunx @biomejs/biome@${V.biome} ci .`] : []), `    bun test`, ``,
+      ...(has(k, "devex", "vitest") ? [`# Vitest run`, `test-workers:`, `    bunx vitest@${V.vitest} run`, ``] : []),
+      `# Serve the site and API locally (cf needs Node 22.18+, not Bun)`, `dev:`, `    npx cf@latest dev`, ``, `# Build and validate without uploading`, `build:`, `    npx cf@latest build`, ``, `# Generate Env types from cloudflare.config.ts and typecheck the Worker`, `typecheck:`, `    npx cf@latest workers types`, `    npx tsc --noEmit`, ``, `# Search and check domains in your Cloudflare account (read-only)`, `domains query="":`, `    sh scripts/find-domain.sh {{query}}`, ``,
+      `# Temporary Cloudflare preview with a claim link (no login needed)`, `preview:`, `    sh scripts/preview-temporary.sh`, ``,
+      `# Deploy with your own Cloudflare account`, `deploy:`, `    bun scripts/validate-kit.ts`, `    npx cf@latest deploy`, ``, ...(k.modules.includes("platform") ? [`# Deploy into the bitkit platform namespace`, `deploy-tenant:`, `    sh scripts/deploy-tenant.sh`, ``] : []),
+      `# Publish the kit to bitkit.sh and print its curl setup command`, `publish:`, `    sh scripts/publish-kit.sh`, ``, `# Lint GitHub workflows`, `audit-actions:`, `    actionlint`, `    zizmor .github/workflows`, ``];
+    if (k.modules.includes("agents")) L.push(`# Preview the Paperclip company import without applying it`, `company-preview:`, `    bunx paperclipai@${V.paperclip} company import ./company --target new --dry-run`, ``);
+    return L.join("\n");
+  }
+
+  /* ---------- deploy: a cf project with cloudflare.config.ts ---------- */
+  const svc = (k) => SERVICES.filter((x) => k.services.includes(x.id));
+  const helperFor = (k, x) => x.helper.replace("{slug}", S(k));
+  function cfConfig(k, { tenant = false } = {}) {
+    const env = svc(k).map((x) => `      ${x.binding}: ${helperFor(k, x)},`).join("\n");
+    const domains = k.deploy.domain && !tenant ? `\n    domains: [${JSON.stringify(k.deploy.domain)}],` : "";
+    return `// ${head(k, "file")}
+// Typed configuration for the cf CLI (open beta): https://developers.cloudflare.com/cf/projects/cloudflare-config/
+// Requires Node.js 22.18 or later; cf does not load this file under Bun.
+import { bindings, defineConfig } from "cf/config";
+import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+
+export default defineConfig(({ mode }) => ({
+  worker: {
+    name: ${JSON.stringify(k.deploy.worker)},
+    compatibilityDate: "${V.compat}",
+    entrypoint,
+    assets: { notFoundHandling: "404-page", runWorkerFirst: ["/api/*"] },${domains}
+    env: {
+      BRAND_NAME: bindings.text(${JSON.stringify(k.brand.name)}),
+      STAGE: bindings.text(mode === "production" ? "production" : "development"),
+${env}
+    },
+  },
+}));
+`;
+  }
+  function workerSrc(k) {
+    const has2 = (id) => k.services.includes(id);
+    const routes = [
+      has2("kv") && `    if (url.pathname === "/api/menu") {\n      const cached = await env.CACHE.get("menu", "json");\n      return Response.json(cached ?? { items: [], note: "Seed the menu with: npx cf@latest kv ..." });\n    }`,
+      has2("d1") && `    if (url.pathname === "/api/signups" && request.method === "POST") {\n      const { email } = (await request.json()) as { email?: string };\n      if (!email || !email.includes("@")) return Response.json({ error: "email required" }, { status: 400 });\n      await env.DB.prepare("INSERT INTO signups (email, created_at) VALUES (?, ?)").bind(email, Date.now()).run();\n      return Response.json({ ok: true }, { status: 201 });\n    }`,
+      has2("analytics") && `    env.EVENTS.writeDataPoint({ blobs: [url.pathname], indexes: [env.BRAND_NAME] });`,
+      has2("ai") && `    if (url.pathname === "/api/describe" && request.method === "POST") {\n      const { item } = (await request.json()) as { item?: string };\n      const out = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", { prompt: \`Write one sentence for a café menu describing: \${item}. No exclamation marks.\` });\n      return Response.json(out);\n    }`,
+      has2("loader") && `    if (url.pathname === "/api/widget") {\n      // Dynamic Worker: runs generated code in a fresh isolate with no network access.\n      const worker = env.LOADER.get("widget-v1", async () => ({\n        compatibilityDate: "${V.compat}",\n        mainModule: "widget.js",\n        modules: { "widget.js": "export default { fetch() { return new Response('hello from a dynamic worker') } }" },\n        globalOutbound: null,\n      }));\n      return worker.getEntrypoint().fetch(request);\n    }`
+    ].filter(Boolean).join("\n");
+    return `// ${head(k, "file")}
+// API routes run first (assets.runWorkerFirst); everything else is the brand site in brand/.
+export default {
+  async fetch(request, env): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname === "/api/health") return Response.json({ ok: true, brand: env.BRAND_NAME, stage: env.STAGE });
+${routes}
+    return new Response("Not found", { status: 404 });
+  },
+} satisfies ExportedHandler<Env>;
+`;
+  }
+  function deployFiles(k) {
+    const f = {};
+    f["package.json"] = JSON.stringify({ name: S(k), private: true, type: "module",
+      scripts: { dev: "cf dev", build: "cf build", types: "cf workers types", typecheck: "cf workers types && tsc --noEmit", deploy: "cf deploy", test: "bun test" },
+      devDependencies: { cf: V.cf, vite: V.vite, "@cloudflare/vite-plugin": V.vitePlugin, typescript: V.typescript } }, null, 2) + "\n";
+    f["cloudflare.config.ts"] = cfConfig(k, { tenant: k.hosting.model === "platform" });
+    f["vite.config.ts"] = `// ${head(k, "file")}\nimport { cloudflare } from "@cloudflare/vite-plugin";\nimport { defineConfig } from "vite";\n\n// brand/ is the static site: brand book, tokens, profile sheets.\nexport default defineConfig({\n  publicDir: "brand",\n  plugins: [cloudflare()],\n});\n`;
+    f["src/index.ts"] = workerSrc(k);
+    f["tsconfig.json"] = JSON.stringify({ compilerOptions: { target: "esnext", module: "esnext", moduleResolution: "bundler", strict: true, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true, types: [] }, include: ["src", "cloudflare.config.ts", ".cloudflare/types/index.d.ts"] }, null, 2) + "\n";
+    if (k.services.includes("d1")) f["migrations/0001_init.sql"] = `-- ${head(k, "file")}\nCREATE TABLE IF NOT EXISTS signups (\n  email TEXT PRIMARY KEY,\n  created_at INTEGER NOT NULL\n);\n`;
+    f["scripts/find-domain.sh"] = `#!/bin/sh
+# ${head(k, "script")}
+# Searches and checks domain names with the cf CLI, using YOUR Cloudflare account
+# (sign in first: npx cf@latest auth login). Read-only: nothing is registered.
+# Register the one you pick yourself in the dashboard or with cf registrar.
+set -eu
+QUERY="\${1:-${k.domain.query || k.brand.name}}"
+npx cf@latest registrar registrations search --query "$QUERY" --limit 12
+${k.domain.results.length ? `npx cf@latest registrar registrations check --domains ${k.domain.results.slice(0, 6).map((r) => r.name).join(" ")}` : `# Then confirm live availability and price:\n# npx cf@latest registrar registrations check --domains name.com name.co`}
+`;
+    f["scripts/preview-temporary.sh"] = `#!/bin/sh
+# ${head(k, "script")}
+# Previews brand/ on a Cloudflare temporary account. cf has no temporary mode yet,
+# so this one step uses Wrangler with flags (it never reads cloudflare.config.ts).
+# Wrangler only allows --temporary without credentials, so env vars are cleared
+# and the config directory is isolated. The claim URL works like a password:
+# open it yourself within 60 minutes; never paste it into issues or logs.
+set -eu
+cd "$(dirname "$0")/.."
+bun scripts/validate-kit.ts
+mkdir -p .tmp/wrangler-temporary
+env -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_API_KEY -u CLOUDFLARE_ACCOUNT_ID \\
+  XDG_CONFIG_HOME="$PWD/.tmp/wrangler-temporary" \\
+  npx wrangler@${V.wrangler} deploy --temporary --name "${k.deploy.worker}-preview" --assets ./brand --compatibility-date ${V.compat}
+`;
+    f["scripts/provision-preview.ts"] = PROVISION(k);
+    return f;
+  }
+  const PROVISION = (k) => `// ${head(k, "script")}
+// Platform path for temporary previews, following
+// https://developers.cloudflare.com/workers/platform/claim-deployments/
+// Run only after the brand owner accepts Cloudflare's Terms of Service and Privacy Policy:
+//   BITKIT_OWNER_ACCEPTED_CF_TERMS=yes bun scripts/provision-preview.ts
+// Writes credentials to .tmp/preview.json (mode 600). Never log the token or claim URL.
+import { createHash } from "node:crypto";
+import { chmod, mkdir, writeFile } from "node:fs/promises";
+
+const API = "https://api.cloudflare.com/client/v4/provisioning/previews";
+if (process.env.BITKIT_OWNER_ACCEPTED_CF_TERMS !== "yes") {
+  console.error("The brand owner must accept https://www.cloudflare.com/terms/ and https://www.cloudflare.com/privacypolicy/ first.");
+  process.exit(2);
+}
+const sha = (b: Uint8Array) => createHash("sha256").update(b).digest();
+function solve(seed: string, k: number, g: number): string {
+  const s = Buffer.from(seed, "base64url");
+  if (s.length !== 32 || !Number.isInteger(k) || k <= 0 || !Number.isInteger(g) || g <= 0 || k * g > 64_000_000) throw new Error("challenge out of bounds");
+  let h = sha(s);
+  const cps = [h];
+  for (let i = 0; i < k; i++) { for (let j = 0; j < g; j++) h = sha(h); cps.push(h); }
+  return Buffer.concat(cps).toString("base64");
+}
+const ch = await (await fetch(\`\${API}/challenge\`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).json();
+if (!ch.success) throw new Error("challenge request failed");
+const { challengeToken, seed, k, g } = ch.result;
+const created = await (await fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
+  termsOfService: "https://www.cloudflare.com/terms/", privacyPolicy: "https://www.cloudflare.com/privacypolicy/", acceptTermsOfService: "yes",
+  challengeToken, solution: { checkpoints: solve(seed, k, g) } }) })).json();
+const r = created.result;
+if (!created.success || !r?.account?.id || !r?.account?.apiToken || !r?.claim?.url || !r?.claim?.expiresAt) throw new Error("temporary account was not created");
+await mkdir(".tmp", { recursive: true });
+await writeFile(".tmp/preview.json", JSON.stringify(r, null, 2));
+await chmod(".tmp/preview.json", 0o600);
+console.log(\`Temporary account \${r.account.id} ready until \${r.claim.expiresAt}. Credentials and claim URL saved to .tmp/preview.json.\`);
+`;
+
+  /* ---------- Cloudflare for Platforms ---------- */
+  function platformFiles(k) {
+    const f = {}, ns = k.hosting.namespace, zone = k.hosting.platformZone;
+    f["platform/package.json"] = JSON.stringify({ name: "bitkit-platform", private: true, type: "module", scripts: { dev: "cf dev", build: "cf build", typecheck: "cf workers types && tsc --noEmit", deploy: "cf deploy" }, devDependencies: { cf: V.cf, vite: V.vite, "@cloudflare/vite-plugin": V.vitePlugin, typescript: V.typescript } }, null, 2) + "\n";
+    f["platform/tsconfig.json"] = JSON.stringify({ compilerOptions: { target: "esnext", module: "esnext", moduleResolution: "bundler", strict: true, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true, types: [] }, include: ["src", "cloudflare.config.ts", ".cloudflare/types/index.d.ts"] }, null, 2) + "\n";
+    f["platform/vite.config.ts"] = `import { cloudflare } from "@cloudflare/vite-plugin";\nimport { defineConfig } from "vite";\n\nexport default defineConfig({ plugins: [cloudflare()] });\n`;
+    f["platform/cloudflare.config.ts"] = `// ${head(k, "file")}
+// The bitkit platform Worker: routes tenant hostnames into a Workers for Platforms
+// dispatch namespace, runs Dynamic Workers, and provisions tenants with a Workflow.
+import { bindings, defineConfig, exports, triggers } from "cf/config";
+import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+// Owner domains attached to the platform (apex and www per tenant). cf deploy keeps only
+// the domains listed here, so add a tenant domain to this file before redeploying.
+import tenantDomains from "./tenant-domains.json" with { type: "json" };
+
+export default defineConfig({
+  worker: {
+    name: "bitkit-platform",
+    compatibilityDate: "${V.compat}",
+    entrypoint,
+    domains: ["${zone}", "app.${zone}", ...tenantDomains],
+    observability: { enabled: true, issues: { enabled: true }, logs: { enabled: true }, traces: { enabled: true } },
+    triggers: [triggers.fetch({ pattern: "*.${zone}/*", zone: "${zone}" })],
+    env: {
+      TENANTS: bindings.dispatchNamespace({ namespace: ${JSON.stringify(ns)} }),
+      LOADER: bindings.workerLoader(),
+      REGISTRY: bindings.d1({ name: "bitkit-registry" }),
+      KITS: bindings.r2({ name: "bitkit-kits" }),
+      PUBLISH_LIMIT: bindings.rateLimit({ namespace: "2001", simple: { limit: 10, period: 60 } }),
+      PUBLISH_TOKEN: bindings.secret(),
+      PROVISION: bindings.workflow({ name: "provision-tenant", worker: "bitkit-platform", exportName: "ProvisionTenant" }),
+      PLATFORM_ZONE: bindings.text(${JSON.stringify(zone)}),
+      CF_ACCOUNT_ID: bindings.secret(),
+      CF_PLATFORM_TOKEN: bindings.secret(),
+    },
+    exports: { ProvisionTenant: exports.workflow({ name: "provision-tenant" }) },
+  },
+});
+`;
+    f["platform/src/index.ts"] = "// __HEAD__\nimport { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from \"cloudflare:workers\";\nimport bitkit from \"./generator.js\";\nimport { handleMcp } from \"./mcp.ts\";\nimport { renderKitSite } from \"./kitsite.ts\";\n\ntype Tenant = { slug: string; script: string; hostname: string; owner: string; status: string; setup_hash: string | null };\ntype KitRecord = { id: string; slug: string; name: string; published_at: number };\nconst APEX = \"__ZONE__\";\n// The kit API and setup scripts live on app.<zone>; every other <slug>.<zone> is a tenant.\nconst APP = `app.${APEX}`;\nexport const RESERVED_SLUGS = new Set([\"app\", \"www\", \"api\", \"admin\", \"mail\"]);\n\nconst b32 = (bytes: Uint8Array) => {\n  const a = \"abcdefghijklmnopqrstuvwxyz234567\";\n  let bits = 0, value = 0, out = \"\";\n  for (const byte of bytes) { value = (value << 8) | byte; bits += 8; while (bits >= 5) { out += a[(value >>> (bits - 5)) & 31]; bits -= 5; } }\n  return bits > 0 ? out + a[(value << (5 - bits)) & 31] : out;\n};\nconst hex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, \"0\")).join(\"\");\n// Compares fixed-length digests so timing does not reveal how much of the token matched.\nconst safeEqual = async (a: string, b: string) => {\n  const [x, y] = await Promise.all([a, b].map((v) => crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(v))));\n  const u = new Uint8Array(x), w = new Uint8Array(y);\n  let diff = 0;\n  for (let i = 0; i < u.length; i++) diff |= u[i] ^ w[i];\n  return diff === 0;\n};\n\n// Builds the bundle once per kit and caches it in R2, so the checksum in the setup script always matches the bytes served.\nasync function bundle(env: Env, id: string): Promise<{ bytes: ArrayBuffer; sha: string; kit: KitRecord } | null> {\n  if (!/^[a-z2-7]{20}$/.test(id)) return null;\n  const kit = await env.REGISTRY.prepare(\"SELECT id, slug, name, published_at FROM kits WHERE id = ?\").bind(id).first<KitRecord>();\n  if (!kit) return null;\n  const cached = await env.KITS.get(`kits/${id}/bundle.tar.gz`);\n  if (cached) return { bytes: await cached.arrayBuffer(), sha: cached.customMetadata?.sha256 ?? \"\", kit };\n  const source = await env.KITS.get(`kits/${id}/bitkit.kit.json`);\n  if (!source) return null;\n  const draft = bitkit.normalize(await source.json());\n  const { files } = bitkit.generate(draft, new Date(kit.published_at));\n  const tarBytes = bitkit.tar(files, kit.slug, kit.published_at);\n  const bytes = await new Response(new Blob([tarBytes]).stream().pipeThrough(new CompressionStream(\"gzip\"))).arrayBuffer();\n  const sha = hex(await crypto.subtle.digest(\"SHA-256\", bytes));\n  await env.KITS.put(`kits/${id}/bundle.tar.gz`, bytes, { httpMetadata: { contentType: \"application/gzip\" }, customMetadata: { sha256: sha } });\n  return { bytes, sha, kit };\n}\n\nasync function apex(request: Request, env: Env, url: URL): Promise<Response> {\n  if (url.pathname === \"/api/kits\" && request.method === \"POST\") {\n    // Operators publish with the bearer token; the hosted builder publishes same-origin, rate limited per IP.\n    const auth = request.headers.get(\"authorization\") ?? \"\";\n    const operator = auth !== \"\" && (await safeEqual(auth, `Bearer ${env.PUBLISH_TOKEN}`));\n    if (!operator) {\n      if (request.headers.get(\"origin\") !== url.origin) return Response.json({ error: \"unauthorized\" }, { status: 401 });\n      const ip = request.headers.get(\"cf-connecting-ip\") ?? \"unknown\";\n      const { success } = await env.PUBLISH_LIMIT.limit({ key: ip });\n      if (!success) return Response.json({ error: \"too many publishes; try again in a minute\" }, { status: 429 });\n    }\n    const body = await request.text();\n    if (body.length > 65536) return Response.json({ error: \"kit too large (64 KB max)\" }, { status: 413 });\n    const draft = bitkit.normalize(JSON.parse(body));\n    const problems = bitkit.problems(draft);\n    if (problems.length) return Response.json({ error: \"invalid kit\", problems }, { status: 422 });\n    const id = b32(crypto.getRandomValues(new Uint8Array(12))).slice(0, 20);\n    const publishedAt = Date.now();\n    await env.KITS.put(`kits/${id}/bitkit.kit.json`, JSON.stringify(draft), { httpMetadata: { contentType: \"application/json\" } });\n    const key = `bk_${b32(crypto.getRandomValues(new Uint8Array(20)))}`;\n    const keyHash = hex(await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(key)));\n    await env.REGISTRY.prepare(\"INSERT INTO kits (id, slug, name, published_at, key_hash, updated_at) VALUES (?, ?, ?, ?, ?, ?)\").bind(id, draft.brand.slug, draft.brand.name, publishedAt, keyHash, publishedAt).run();\n    return Response.json({ id, key, setup: `curl -fsSL ${url.origin}/setup/${id} | sh`, tarball: `${url.origin}/kits/${id}.tar.gz`, kitSite: `${url.origin}/kits/${id}/`, mcp: `${url.origin}/mcp`, publishedAt }, { status: 201 });\n  }\n  if (url.pathname === \"/mcp\") return handleMcp(request, env, url.origin);\n  if ((url.pathname === \"/plugin.zip\" || url.pathname === \"/skill.zip\") && request.method === \"GET\") {\n    const o = await env.KITS.get(`site/plugin${url.pathname}`);\n    return o ? new Response(o.body, { headers: { \"content-type\": \"application/zip\", \"content-disposition\": `attachment; filename=\"bitkit-${url.pathname.slice(1)}\"` } }) : new Response(\"Not found\", { status: 404 });\n  }\n  const ks = url.pathname.match(/^\\/kits\\/([a-z2-7]{20})(\\/.*)$/);\n  if (ks && request.method === \"GET\") return kitSite(env, ks[1], ks[2], url.origin);\n  let m = url.pathname.match(/^\\/kits\\/([a-z2-7]+)\\.tar\\.gz$/);\n  if (m && request.method === \"GET\") {\n    const b = await bundle(env, m[1]);\n    if (!b) return new Response(\"Unknown kit\", { status: 404 });\n    return new Response(b.bytes, { headers: { \"content-type\": \"application/gzip\", \"x-bitkit-sha256\": b.sha, \"cache-control\": \"public, max-age=31536000, immutable\" } });\n  }\n  m = url.pathname.match(/^\\/setup\\/([a-z2-7]+)$/);\n  if (m && request.method === \"GET\") {\n    const b = await bundle(env, m[1]);\n    if (!b) return new Response(\"echo 'bitkit: unknown kit id' >&2; exit 1\\n\", { status: 404, headers: { \"content-type\": \"text/plain; charset=utf-8\" } });\n    const script = bitkit.setupScript({ id: b.kit.id, slug: b.kit.slug, name: b.kit.name, sha: b.sha, origin: url.origin });\n    return new Response(script, { headers: { \"content-type\": \"text/plain; charset=utf-8\", \"cache-control\": \"no-store\" } });\n  }\n  if (url.pathname === \"/\" && request.method === \"GET\") {\n    const page = await env.KITS.get(\"site/app/index.html\");\n    if (page) return new Response(page.body, { headers: { \"content-type\": \"text/html; charset=utf-8\", \"cache-control\": \"public, max-age=300\", \"x-content-type-options\": \"nosniff\" } });\n  }\n  if (url.pathname === \"/\") return new Response(`bitkit: brand identity kits\\n\\nRun a kit's setup with:\\n  curl -fsSL ${url.origin}/setup/<kit-id> | sh\\n`, { headers: { \"content-type\": \"text/plain; charset=utf-8\" } });\n  return new Response(\"Not found\", { status: 404 });\n}\n\n// Kit site: the submitted Claude Design System, or the seed generated from the kit until one arrives.\nasync function kitSite(env: Env, id: string, path: string, origin: string, siteUrl?: string): Promise<Response> {\n  if (path.startsWith(\"/assets/\")) {\n    const o = await env.KITS.get(`kits/${id}/system/project${path}`);\n    return o ? new Response(o.body, { headers: { \"content-type\": o.httpMetadata?.contentType ?? (path.endsWith(\".svg\") ? \"image/svg+xml\" : \"application/octet-stream\"), \"cache-control\": \"public, max-age=300\" } }) : new Response(\"Not found\", { status: 404 });\n  }\n  if (path !== \"/\") return Response.redirect(`${origin}/kits/${id}/`, 302);\n  const manifest = await env.KITS.get(`kits/${id}/system.json`);\n  let files: Record<string, string> = {}, source: \"claude\" | \"seed\" = \"seed\", updatedAt: string | undefined;\n  if (manifest) {\n    const mf = await manifest.json<{ files: string[]; at: string }>();\n    for (const p of mf.files) { const o = await env.KITS.get(`kits/${id}/system/${p}`); if (o) files[p] = await o.text(); }\n    source = \"claude\"; updatedAt = mf.at.slice(0, 10);\n  } else {\n    const src = await env.KITS.get(`kits/${id}/bitkit.kit.json`);\n    if (!src) return new Response(\"Unknown kit\", { status: 404 });\n    const kit = bitkit.normalize(await src.json()); kit.modules = [...new Set([...kit.modules, \"design-system\"])];\n    for (const [p, c] of Object.entries(bitkit.generate(kit).files)) if (p.startsWith(\"design-system/project/\")) files[p.slice(\"design-system/\".length)] = c;\n  }\n  return new Response(renderKitSite(files, { source, siteUrl, updatedAt }), { headers: { \"content-type\": \"text/html; charset=utf-8\", \"cache-control\": \"public, max-age=60\" } });\n}\n\nasync function page(env: Env, key: string): Promise<Response | null> {\n  const o = await env.KITS.get(key);\n  return o ? new Response(o.body, { headers: { \"content-type\": \"text/html; charset=utf-8\", \"cache-control\": \"public, max-age=300\", \"x-content-type-options\": \"nosniff\" } }) : null;\n}\n\nexport default {\n  async fetch(request, env): Promise<Response> {\n    const url = new URL(request.url);\n    // app.<zone>, the apex, and workers.dev serve the kit API; every other hostname (<slug>.<zone> or an owner domain) is a tenant.\n    const host = url.hostname;\n    if (host === APEX) return Response.redirect(`https://www.${APEX}${url.pathname}${url.search}`, 301);\n    if (host === `www.${APEX}`) return (await page(env, \"site/www/index.html\")) ?? Response.redirect(`https://${APP}/`, 302);\n    if (host === APP || host.endsWith(\".workers.dev\")) return apex(request, env, url);\n\n    // Kit sites: kit-<slug>.<zone> or kit.<owner domain>.\n    const kitSlug = host.match(new RegExp(`^kit-([a-z0-9-]+)\\\\.${APEX.replace(\".\", \"\\\\.\")}$`))?.[1];\n    const kitOwner = host.startsWith(\"kit.\") ? host.slice(4) : null;\n    if (kitSlug || kitOwner) {\n      const t = await env.REGISTRY.prepare(\"SELECT t.slug, t.hostname, t.kit_id FROM tenants t LEFT JOIN tenant_hosts h ON h.slug = t.slug WHERE (t.slug = ?1 OR h.hostname = ?2) AND t.kit_id IS NOT NULL LIMIT 1\").bind(kitSlug ?? \"\", kitOwner ?? \"\").first<{ slug: string; hostname: string; kit_id: string }>();\n      if (t) {\n        if (url.pathname.startsWith(\"/assets/\") || url.pathname === \"/\") return kitSite(env, t.kit_id, url.pathname, url.origin, `https://${kitOwner ?? t.hostname}`);\n        return Response.redirect(`${url.origin}/`, 302);\n      }\n    }\n\n    // Dynamic Workers: preview generated code in an isolate with no outbound network.\n    if (url.pathname.startsWith(\"/_bitkit/sandbox/\")) {\n      const id = url.pathname.split(\"/\")[3];\n      const row = await env.REGISTRY.prepare(\"SELECT code FROM snippets WHERE id = ?\").bind(id).first<{ code: string }>();\n      if (!row) return new Response(\"Unknown snippet\", { status: 404 });\n      const worker = env.LOADER.get(`snippet:${id}`, async () => ({\n        compatibilityDate: \"__COMPAT__\",\n        mainModule: \"main.js\",\n        modules: { \"main.js\": row.code },\n        globalOutbound: null,\n      }));\n      return worker.getEntrypoint().fetch(request);\n    }\n\n    // Tenant routing: <slug>.__ZONE__ plus any custom hostnames mapped in tenant_hosts.\n    const tenant = await env.REGISTRY.prepare(\"SELECT t.* FROM tenants t LEFT JOIN tenant_hosts h ON h.slug = t.slug WHERE (t.hostname = ?1 OR h.hostname = ?1) AND t.status = 'active' LIMIT 1\").bind(host).first<Tenant>();\n    if (!tenant) return new Response(\"No site here yet\", { status: 404 });\n\n    // EmDash's first-run setup makes the first visitor the admin, so the platform gates it:\n    // only a browser holding the owner's one-time setup cookie reaches the setup routes.\n    const setupPath = url.pathname.startsWith(\"/_emdash/admin/setup\") || (url.pathname.startsWith(\"/_emdash/api/setup\") && url.pathname !== \"/_emdash/api/setup/status\");\n    if (url.pathname === \"/_bitkit/setup\") {\n      const token = url.searchParams.get(\"token\") ?? \"\";\n      if (!tenant.setup_hash || hex(await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(token))) !== tenant.setup_hash) return new Response(\"This setup link is not valid.\", { status: 403 });\n      return new Response(null, { status: 302, headers: { location: \"/_emdash/admin\", \"set-cookie\": `bitkit_setup=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400` } });\n    }\n    if (setupPath) {\n      const cookie = request.headers.get(\"cookie\")?.match(/(?:^|;\\s*)bitkit_setup=([^;]+)/)?.[1] ?? \"\";\n      const okSetup = tenant.setup_hash && hex(await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(cookie))) === tenant.setup_hash;\n      if (!okSetup) return new Response(\"Setup is reserved for the site owner. Open the setup link bitkit sent you.\", { status: 403, headers: { \"content-type\": \"text/plain; charset=utf-8\" } });\n    }\n    try {\n      return await env.TENANTS.get(tenant.script).fetch(request);\n    } catch (e) {\n      if (e instanceof Error && e.message.startsWith(\"Worker not found\")) return new Response(\"Site is being set up\", { status: 503 });\n      throw e;\n    }\n  },\n} satisfies ExportedHandler<Env>;\n\n// Provisions one tenant from a bitkit.kit.json. Each step is retried on its own.\n// Creates resources in the PLATFORM account, never in the owner's, and never\n// creates social or registrar accounts.\ntype ProvisionParams = { kit: { brand: { slug: string; name: string }; services: string[] } };\nexport class ProvisionTenant extends WorkflowEntrypoint<Env, ProvisionParams> {\n  async run(event: WorkflowEvent<ProvisionParams>, step: WorkflowStep) {\n    const { kit } = event.payload;\n    if (RESERVED_SLUGS.has(kit.brand.slug)) throw new Error(`slug ${kit.brand.slug} is reserved`);\n    const slug = kit.brand.slug, script = `tenant-${slug}`, hostname = `${slug}.${this.env.PLATFORM_ZONE}`;\n    const api = (path: string, init: RequestInit = {}) =>\n      fetch(`https://api.cloudflare.com/client/v4/accounts/${this.env.CF_ACCOUNT_ID}${path}`, {\n        ...init,\n        headers: { authorization: `Bearer ${this.env.CF_PLATFORM_TOKEN}`, \"content-type\": \"application/json\" },\n      }).then(async (r) => { const j = await r.json<{ success: boolean; errors: unknown; result: any }>(); if (!j.success) throw new Error(JSON.stringify(j.errors)); return j.result; });\n\n    const resources = await step.do(\"create resources\", async () => {\n      const out: Record<string, string> = {};\n      if (kit.services.includes(\"kv\")) out.kv = (await api(\"/storage/kv/namespaces\", { method: \"POST\", body: JSON.stringify({ title: `${slug}-cache` }) })).id;\n      if (kit.services.includes(\"d1\")) out.d1 = (await api(\"/d1/database\", { method: \"POST\", body: JSON.stringify({ name: `${slug}-db` }) })).uuid;\n      if (kit.services.includes(\"r2\")) { await api(\"/r2/buckets\", { method: \"POST\", body: JSON.stringify({ name: `${slug}-media` }) }); out.r2 = `${slug}-media`; }\n      return out;\n    });\n    await step.do(\"register tenant\", async () => {\n      await this.env.REGISTRY.prepare(\"INSERT OR REPLACE INTO tenants (slug, script, hostname, owner, status, resources) VALUES (?, ?, ?, ?, 'pending', ?)\")\n        .bind(slug, script, hostname, \"\", JSON.stringify(resources)).run();\n    });\n    // The tenant's code is deployed with `npx cf@latest deploy --dispatch-namespace __NS__`, then activated here.\n    await step.waitForEvent(\"tenant deployed\", { type: \"tenant-deployed\", timeout: \"7 days\" });\n    await step.do(\"activate\", async () => {\n      await this.env.REGISTRY.prepare(\"UPDATE tenants SET status = 'active' WHERE slug = ?\").bind(slug).run();\n    });\n    return { slug, hostname, resources };\n  }\n}\n".replace("__HEAD__", head(k, "file")).replace(/__ZONE__/g, zone).replace(/__COMPAT__/g, V.compat).replace(/__NS__/g, ns);
+    f["platform/migrations/0001_registry.sql"] = `-- ${head(k, "file")}
+CREATE TABLE IF NOT EXISTS tenants (
+  slug TEXT PRIMARY KEY,
+  script TEXT NOT NULL,
+  hostname TEXT NOT NULL UNIQUE,
+  owner TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL CHECK (status IN ('pending', 'active', 'suspended')),
+  resources TEXT NOT NULL DEFAULT '{}'
+);
+CREATE TABLE IF NOT EXISTS kits (
+  id TEXT PRIMARY KEY,
+  slug TEXT NOT NULL,
+  name TEXT NOT NULL,
+  published_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS snippets (
+  id TEXT PRIMARY KEY,
+  tenant TEXT NOT NULL REFERENCES tenants(slug),
+  code TEXT NOT NULL
+);
+`;
+    f["platform/migrations/0002_tenant_hosts.sql"] = `-- ${head(k, "file")}\n-- Custom hostnames per tenant (apex and www of an owner domain, for example).\nCREATE TABLE IF NOT EXISTS tenant_hosts (\n  hostname TEXT PRIMARY KEY,\n  slug TEXT NOT NULL REFERENCES tenants(slug) ON DELETE CASCADE\n);\nCREATE INDEX IF NOT EXISTS tenant_hosts_slug ON tenant_hosts(slug);\n`;
+    f["platform/tenant-domains.json"] = JSON.stringify(k.deploy.domain && k.agents.purpose !== "studio" ? [k.deploy.domain, `www.${k.deploy.domain}`] : [], null, 2) + "\n";
+    Object.assign(f, {"platform/src/md.ts":"// Minimal Markdown to HTML for brand books: headings, paragraphs, lists, tables, code, emphasis, links.\nconst esc = (s: string) => s.replace(/[&<>\"']/g, (c) => ({ \"&\": \"&amp;\", \"<\": \"&lt;\", \">\": \"&gt;\", '\"': \"&quot;\", \"'\": \"&#39;\" })[c]!);\nconst inline = (s: string) =>\n  esc(s)\n    .replace(/`([^`]+)`/g, \"<code>$1</code>\")\n    .replace(/\\*\\*([^*]+)\\*\\*/g, \"<strong>$1</strong>\")\n    .replace(/\\[([^\\]]+)\\]\\((https?:[^)\\s]+|\\/[^)\\s]*|#[^)\\s]*)\\)/g, '<a href=\"$2\">$1</a>');\n\nexport function markdown(src: string): string {\n  const lines = src.replace(/\\r/g, \"\").split(\"\\n\");\n  const out: string[] = [];\n  let i = 0;\n  if (lines[0] === \"---\") { i = lines.indexOf(\"---\", 1) + 1; }\n  while (i < lines.length) {\n    const l = lines[i];\n    if (!l.trim()) { i++; continue; }\n    if (l.startsWith(\"```\")) {\n      const body: string[] = []; i++;\n      while (i < lines.length && !lines[i].startsWith(\"```\")) body.push(lines[i++]);\n      i++; out.push(`<pre><code>${esc(body.join(\"\\n\"))}</code></pre>`); continue;\n    }\n    const h = l.match(/^(#{1,4})\\s+(.*)$/);\n    if (h) { const n = h[1].length; const id = h[2].toLowerCase().replace(/[^a-z0-9]+/g, \"-\").replace(/^-|-$/g, \"\"); out.push(`<h${n} id=\"${id}\">${inline(h[2])}</h${n}>`); i++; continue; }\n    if (l.startsWith(\"|\")) {\n      const rows: string[][] = [];\n      while (i < lines.length && lines[i].startsWith(\"|\")) { rows.push(lines[i].split(\"|\").slice(1, -1).map((c) => c.trim())); i++; }\n      const [head, , ...body] = rows;\n      out.push(`<div class=\"tw\"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join(\"\")}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join(\"\")}</tr>`).join(\"\")}</tbody></table></div>`);\n      continue;\n    }\n    if (/^\\s*[-*]\\s+/.test(l)) {\n      const items: string[] = [];\n      while (i < lines.length && /^\\s*[-*]\\s+/.test(lines[i])) items.push(lines[i++].replace(/^\\s*[-*]\\s+(\\[[ x]\\]\\s+)?/, \"\"));\n      out.push(`<ul>${items.map((x) => `<li>${inline(x)}</li>`).join(\"\")}</ul>`); continue;\n    }\n    if (l.startsWith(\">\")) { const q: string[] = []; while (i < lines.length && lines[i].startsWith(\">\")) q.push(lines[i++].replace(/^>\\s?/, \"\")); out.push(`<blockquote>${inline(q.join(\" \"))}</blockquote>`); continue; }\n    const p: string[] = [];\n    while (i < lines.length && lines[i].trim() && !/^(#{1,4}\\s|```|\\||\\s*[-*]\\s|>)/.test(lines[i])) p.push(lines[i++]);\n    out.push(`<p>${inline(p.join(\" \"))}</p>`);\n  }\n  return out.join(\"\\n\");\n}\nexport { esc };\n","platform/src/kitsite.ts":"// Read-only kit site: renders a tenant's design system (submitted from Claude, or the generated seed).\nimport { esc, markdown } from \"./md.ts\";\n\ntype Files = Record<string, string>;\ntype Token = { name: string; value: string | Record<string, string>; usage?: string };\n\nexport function renderKitSite(files: Files, opts: { source: \"claude\" | \"seed\"; siteUrl?: string; updatedAt?: string }): string {\n  const get = (p: string) => files[`project/${p}`] ?? files[p];\n  let tokens: any = {};\n  try { tokens = JSON.parse(get(\"tokens.json\") ?? \"{}\"); } catch { tokens = {}; }\n  let index: any = {};\n  try { index = JSON.parse(get(\"design-system.json\") ?? \"{}\"); } catch { index = {}; }\n  const title = index.title || tokens.name || \"Design system\";\n  const themes: { id: string; name: string }[] = tokens.color?.themes ?? [{ id: \"light\", name: \"Light\" }];\n  const colors: Token[] = tokens.color?.tokens ?? [];\n  const val = (t: Token, theme: string) => (typeof t.value === \"string\" ? t.value : t.value[theme] ?? t.value[themes[0].id]);\n  const cssVars = (theme: string) => colors.map((t) => `--${t.name}:${val(t, theme)};`).join(\"\") +\n    [...(tokens.spacing?.tokens ?? []), ...(tokens.radius?.tokens ?? [])].map((t: Token) => `--${t.name}:${t.value};`).join(\"\") +\n    Object.entries(tokens.type?.families ?? {}).map(([k, v]) => `--font-${k}:${v};`).join(\"\");\n  const comps = [...new Set(Object.keys(files).map((p) => p.replace(/^project\\//, \"\").match(/^components\\/([^/]+)\\//)?.[1]).filter(Boolean) as string[])].filter((c) => c !== \"Cover\");\n  const fontsHref = Object.values(tokens.type?.families ?? {}).map((f: any) => String(f).match(/^\"([^\"]+)\"/)?.[1]).filter((f) => f && !/^(ui-|system-ui|Georgia)/.test(f!))\n    .map((f) => `family=${f!.replace(/ /g, \"+\")}:wght@400;600;700`).join(\"&\");\n  const preview = (html: string, h: number) => {\n    const doc = `<!doctype html><html><head><meta charset=\"utf-8\">${fontsHref ? `<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?${fontsHref}&display=swap\">` : \"\"}<style>:root{${cssVars(themes[0].id)}}</style></head><body>${html.replace(/^<!--[^>]*-->\\s*/, \"\")}</body></html>`;\n    return `<iframe class=\"pv\" sandbox=\"allow-same-origin\" loading=\"lazy\" style=\"height:${h}px\" srcdoc=\"${esc(doc)}\"></iframe>`;\n  };\n  const height = (html: string, d: number) => Number(html.match(/height=(\\d+)/)?.[1] ?? d);\n  const cover = get(\"components/Cover/preview.html\");\n  const readme = get(\"README.md\") ?? `# ${title}\\n`;\n  const t0 = themes[0].id, t1 = themes[1]?.id;\n  return `<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>${esc(title)} · Design system</title>${fontsHref ? `<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?${fontsHref}&display=swap\">` : \"\"}\n<style>\n:root{${cssVars(t0)}color-scheme:light}\n${t1 ? `@media (prefers-color-scheme: dark){:root:not([data-theme=${t0}]){${cssVars(t1)}color-scheme:dark}}:root[data-theme=${t1}]{${cssVars(t1)}color-scheme:dark}` : \"\"}\n*{box-sizing:border-box}body{margin:0;background:var(--paper,#fff);color:var(--ink,#111);font:16px/1.55 var(--font-body,system-ui,sans-serif)}\n.wrap{max-width:1040px;margin:0 auto;padding:clamp(16px,4vw,40px)}\nheader{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px clamp(16px,4vw,40px);border-bottom:1px solid var(--line,#ddd);position:sticky;top:0;background:var(--paper,#fff);z-index:2}\nheader b{font:700 18px/1 var(--font-heading,inherit)}header nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}a{color:var(--primary,#06c)}\n.btn{border:1px solid var(--line,#ccc);background:var(--raised,#fff);color:var(--ink,#111);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}\nh1,h2,h3{font-family:var(--font-heading,inherit);line-height:1.15;letter-spacing:-.01em}h2{margin-top:2.2em}\n.card{background:var(--raised,#fff);border:1px solid var(--line,#ddd);border-radius:var(--radius-l,16px);overflow:hidden;margin:16px 0}\n.card .meta{padding:14px 16px;border-top:1px solid var(--line,#ddd)}.pv{display:block;width:100%;border:0;background:var(--paper,#fff)}\n.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line,#ddd);vertical-align:top}\n.sw{display:inline-block;width:18px;height:18px;border-radius:5px;border:1px solid var(--line,#ccc);vertical-align:-4px;margin-right:6px}\ncode{font:13px ui-monospace,Menlo,monospace}pre{overflow-x:auto;background:var(--raised,#f6f6f6);padding:12px;border-radius:8px}\nblockquote{margin:0;padding:12px 16px;border-left:4px solid var(--accent,#999);background:var(--raised,#f6f6f6)}\n.note{font-size:13px;color:var(--ink-muted,#666)}\n</style></head><body>\n<header><b>${esc(title)}</b><nav><a href=\"#brand\">Brand book</a><a href=\"#tokens\">Tokens</a>${comps.length ? `<a href=\"#components\">Components</a>` : \"\"}${opts.siteUrl ? `<a href=\"${esc(opts.siteUrl)}\">Website</a>` : \"\"}<button class=\"btn\" type=\"button\" onclick=\"var r=document.documentElement;r.dataset.theme=(r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'${t1 ?? t0}':'${t0}'))==='${t0}'?'${t1 ?? t0}':'${t0}'\">Theme</button></nav></header>\n<main class=\"wrap\">\n${cover ? `<div class=\"card\">${preview(cover, height(cover, 320))}</div>` : \"\"}\n<section id=\"brand\">${markdown(readme)}</section>\n<section id=\"tokens\"><h2>Tokens</h2>\n<h3>Color</h3><div class=\"tw\"><table><thead><tr><th>Token</th>${themes.map((t) => `<th>${esc(t.name)}</th>`).join(\"\")}<th>Use</th></tr></thead><tbody>\n${colors.map((t) => `<tr><td><code>${esc(t.name)}</code></td>${themes.map((th) => `<td><span class=\"sw\" style=\"background:${esc(val(t, th.id))}\"></span><code>${esc(val(t, th.id))}</code></td>`).join(\"\")}<td>${esc(t.usage ?? \"\")}</td></tr>`).join(\"\")}\n</tbody></table></div>\n<h3>Type</h3>${(tokens.type?.groups ?? []).map((g: any) => g.styles.map((s: any) => `<p style=\"margin:10px 0;font-family:var(--font-${esc(g.family)});font-size:${esc(s.fontSize)};line-height:${esc(String(s.lineHeight))};font-weight:${esc(String(s.fontWeight))}\">${esc(s.name)} · ${esc(title)}</p>`).join(\"\")).join(\"\")}\n<h3>Spacing and radius</h3><div class=\"tw\"><table><tbody>${[...(tokens.spacing?.tokens ?? []), ...(tokens.radius?.tokens ?? [])].map((t: Token) => `<tr><td><code>${esc(t.name)}</code></td><td><code>${esc(String(t.value))}</code></td><td>${esc(t.usage ?? \"\")}</td></tr>`).join(\"\")}</tbody></table></div>\n</section>\n${comps.length ? `<section id=\"components\"><h2>Components</h2>${comps.map((c) => { const pv = get(`components/${c}/preview.html`); const rd = get(`components/${c}/README.md`); return `<div class=\"card\">${pv ? preview(pv, height(pv, 120)) : \"\"}<div class=\"meta\"><h3 style=\"margin:0 0 6px\">${esc(c)}</h3>${rd ? markdown(rd) : \"\"}</div></div>`; }).join(\"\")}</section>` : \"\"}\n<p class=\"note\">${opts.source === \"claude\" ? \"Built in Claude\" : \"Generated from the bitkit kit; build it out in Claude\"}${opts.updatedAt ? ` · updated ${esc(opts.updatedAt)}` : \"\"}. Served by bitkit.</p>\n</main></body></html>`;\n}\n","platform/src/mcp.ts":"// bitkit MCP server: stateless Streamable HTTP (JSON responses), so any MCP client can use it.\n// Reads need only the kit id (an unguessable 20-character id). Writes also need the kit's edit key.\nimport bitkit from \"./generator.js\";\n\ntype Ctx = { env: Env; origin: string };\ntype Tool = { name: string; description: string; inputSchema: object; run: (args: any, ctx: Ctx) => Promise<unknown> };\nconst VERSIONS = [\"2026-07-28\", \"2025-11-25\", \"2025-06-18\", \"2025-03-26\"];\nconst KIT = { type: \"string\", pattern: \"^[a-z2-7]{20}$\", description: \"Kit id from the bitkit setup command, e.g. gmzz7vbo5w3pvb3iix7q\" };\nconst KEY = { type: \"string\", description: \"The kit's edit key, shown once when the kit was published\" };\n\nconst hex = async (s: string) => [...new Uint8Array(await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\nasync function loadKit(env: Env, id: string) {\n  if (!/^[a-z2-7]{20}$/.test(id)) throw new Error(\"kit_id must be 20 characters a-z and 2-7\");\n  const row = await env.REGISTRY.prepare(\"SELECT id, slug, name, published_at, key_hash FROM kits WHERE id = ?\").bind(id).first<{ id: string; slug: string; name: string; published_at: number; key_hash: string | null }>();\n  const obj = row && (await env.KITS.get(`kits/${id}/bitkit.kit.json`));\n  if (!row || !obj) throw new Error(\"No kit with that id\");\n  return { row, kit: bitkit.normalize(await obj.json()) };\n}\nasync function authorize(env: Env, id: string, key: string) {\n  const { row, kit } = await loadKit(env, id);\n  if (!row.key_hash || typeof key !== \"string\" || (await hex(key)) !== row.key_hash) throw new Error(\"The edit key does not match this kit\");\n  return { row, kit };\n}\nconst merge = (a: any, b: any): any => (b && typeof b === \"object\" && !Array.isArray(b) ? Object.fromEntries([...new Set([...Object.keys(a ?? {}), ...Object.keys(b)])].map((k) => [k, k in b ? merge(a?.[k], b[k]) : a[k]])) : b);\nconst safePath = (p: string) => typeof p === \"string\" && p.startsWith(\"project/\") && !p.includes(\"..\") && !p.includes(\"\\\\\") && /^[A-Za-z0-9_./~-]+$/.test(p);\n\nexport const TOOLS: Tool[] = [\n  { name: \"get_kit\", description: \"Read a bitkit kit (bitkit.kit.json): brand, handles, platforms, palette, type, voice, services, and modules.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT }, required: [\"kit_id\"] },\n    run: async ({ kit_id }, { env }) => (await loadKit(env, kit_id)).kit },\n  { name: \"get_design_seed\", description: \"Get the starting files for the kit's Claude Design System (project/tokens.json, project/README.md, components, the mark). Create the design system from these files exactly, then refine it with the owner.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT }, required: [\"kit_id\"] },\n    run: async ({ kit_id }, { env }) => { const { kit } = await loadKit(env, kit_id); kit.modules = [...new Set([...kit.modules, \"design-system\"])];\n      const files = bitkit.generate(kit).files; return Object.fromEntries(Object.entries(files).filter(([p]) => p.startsWith(\"design-system/project/\")).map(([p, c]) => [p.slice(\"design-system/\".length), c])); } },\n  { name: \"update_kit\", description: \"Change a kit. Pass only the fields to change; arrays replace whole arrays. Returns the updated kit or the problems that blocked it.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT, key: KEY, changes: { type: \"object\", description: \"Partial bitkit.kit.json\" } }, required: [\"kit_id\", \"key\", \"changes\"] },\n    run: async ({ kit_id, key, changes }, { env }) => { const { kit } = await authorize(env, kit_id, key); const next = bitkit.normalize(merge(kit, changes));\n      const problems = bitkit.problems(next); if (problems.length) return { updated: false, problems };\n      await env.KITS.put(`kits/${kit_id}/bitkit.kit.json`, JSON.stringify(next), { httpMetadata: { contentType: \"application/json\" } });\n      await env.KITS.delete(`kits/${kit_id}/bundle.tar.gz`);\n      await env.REGISTRY.prepare(\"UPDATE kits SET name = ?, updated_at = ? WHERE id = ?\").bind(next.brand.name, Date.now(), kit_id).run();\n      return { updated: true, kit: next }; } },\n  { name: \"submit_design_system\", description: \"Hand the finished Claude Design System back to bitkit. Send every file under project/ (tokens.json, README.md, design-system.json, components/*/README.md and preview.html) as text, and binary assets (images, fonts) as base64. bitkit then serves it at the kit site.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT, key: KEY,\n      files: { type: \"object\", additionalProperties: { type: \"string\" }, description: \"Map of project/... path to file text\" },\n      assets: { type: \"object\", additionalProperties: { type: \"string\" }, description: \"Map of project/assets/... path to base64 bytes\" } }, required: [\"kit_id\", \"key\", \"files\"] },\n    run: async ({ kit_id, key, files, assets = {} }, { env, origin }) => { await authorize(env, kit_id, key);\n      const all = { ...files, ...assets }; const bad = Object.keys(all).filter((p) => !safePath(p));\n      if (bad.length) return { stored: false, problem: `Paths must start with project/ and use letters, digits, and ./_-~: ${bad.slice(0, 5).join(\", \")}` };\n      if (!files[\"project/tokens.json\"] && !files[\"project/README.md\"]) return { stored: false, problem: \"Include at least project/README.md or project/tokens.json\" };\n      const size = Object.values(all).reduce((n: number, v: any) => n + String(v).length, 0); if (size > 4_000_000) return { stored: false, problem: \"Over 4 MB; send large assets in a second call\" };\n      for (const [p, t] of Object.entries(files)) await env.KITS.put(`kits/${kit_id}/system/${p}`, String(t));\n      for (const [p, b] of Object.entries(assets)) await env.KITS.put(`kits/${kit_id}/system/${p}`, Uint8Array.from(atob(String(b)), (c) => c.charCodeAt(0)));\n      const manifest = { files: Object.keys(files), assets: Object.keys(assets), at: new Date().toISOString() };\n      await env.KITS.put(`kits/${kit_id}/system.json`, JSON.stringify(manifest), { httpMetadata: { contentType: \"application/json\" } });\n      return { stored: true, files: manifest.files.length, assets: manifest.assets.length, kit_site: `${origin}/kits/${kit_id}/` }; } },\n  { name: \"kit_status\", description: \"Where a kit lives: setup command, kit site, website, and deploy status.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT }, required: [\"kit_id\"] },\n    run: async ({ kit_id }, { env, origin }) => { const { kit } = await loadKit(env, kit_id);\n      const tenant = await env.REGISTRY.prepare(\"SELECT slug, hostname, status FROM tenants WHERE kit_id = ?\").bind(kit_id).first<{ slug: string; hostname: string; status: string }>();\n      const req = await env.REGISTRY.prepare(\"SELECT status, created_at FROM deploy_requests WHERE kit_id = ? ORDER BY created_at DESC LIMIT 1\").bind(kit_id).first<{ status: string; created_at: number }>();\n      const system = await env.KITS.head(`kits/${kit_id}/system.json`);\n      return { brand: kit.brand.name, setup: `curl -fsSL ${origin}/setup/${kit_id} | sh`, kit_site: `${origin}/kits/${kit_id}/`, design_system: system ? \"submitted\" : \"seed only\",\n        website: tenant ? `https://${tenant.hostname}` : null, tenant_status: tenant?.status ?? \"not deployed\", deploy_request: req ?? null }; } },\n  { name: \"request_deploy\", description: \"Ask bitkit to deploy the kit's website on the owner's behalf (EmDash marketing site on bitkit's Cloudflare platform). Never creates social or registrar accounts.\",\n    inputSchema: { type: \"object\", properties: { kit_id: KIT, key: KEY }, required: [\"kit_id\", \"key\"] },\n    run: async ({ kit_id, key }, { env }) => { await authorize(env, kit_id, key);\n      await env.REGISTRY.prepare(\"INSERT INTO deploy_requests (kit_id, status, created_at) VALUES (?, 'requested', ?)\").bind(kit_id, Date.now()).run();\n      return { requested: true, note: \"Queued. kit_status shows progress.\" }; } }\n];\n\nconst INSTRUCTIONS = \"bitkit builds brand identity kits. Start with get_kit, then get_design_seed to create the owner's Claude Design System from those files exactly. When the owner is happy, send the system back with submit_design_system and offer request_deploy. Write tools need the kit's edit key; ask the owner for it and never repeat it back. Never create, sign in to, or post from social or registrar accounts; the owner does that.\";\n\nexport async function handleMcp(request: Request, env: Env, origin: string): Promise<Response> {\n  if (request.method === \"GET\" || request.method === \"DELETE\") return new Response(null, { status: 405, headers: { allow: \"POST\" } });\n  if (request.method !== \"POST\") return new Response(null, { status: 405 });\n  let msg: any; try { msg = await request.json(); } catch { return Response.json({ jsonrpc: \"2.0\", id: null, error: { code: -32700, message: \"Parse error\" } }, { status: 400 }); }\n  const one = async (m: any) => {\n    if (m.id === undefined) return null; // notification\n    const ok = (result: unknown) => ({ jsonrpc: \"2.0\", id: m.id, result });\n    if (m.method === \"initialize\") {\n      const v = VERSIONS.includes(m.params?.protocolVersion) ? m.params.protocolVersion : VERSIONS[0];\n      return ok({ protocolVersion: v, capabilities: { tools: { listChanged: false } }, serverInfo: { name: \"bitkit\", title: \"bitkit\", version: \"0.1.0\" }, instructions: INSTRUCTIONS });\n    }\n    if (m.method === \"ping\") return ok({});\n    if (m.method === \"tools/list\") return ok({ tools: TOOLS.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });\n    if (m.method === \"tools/call\") {\n      const t = TOOLS.find((x) => x.name === m.params?.name);\n      if (!t) return { jsonrpc: \"2.0\", id: m.id, error: { code: -32602, message: `Unknown tool ${m.params?.name}` } };\n      try { const out = await t.run(m.params?.arguments ?? {}, { env, origin }); return ok({ content: [{ type: \"text\", text: JSON.stringify(out, null, 2) }], structuredContent: out && typeof out === \"object\" && !Array.isArray(out) ? out : { result: out } }); }\n      catch (e) { return ok({ content: [{ type: \"text\", text: e instanceof Error ? e.message : String(e) }], isError: true }); }\n    }\n    return { jsonrpc: \"2.0\", id: m.id, error: { code: -32601, message: `Method not found: ${m.method}` } };\n  };\n  const res = Array.isArray(msg) ? (await Promise.all(msg.map(one))).filter(Boolean) : await one(msg);\n  if (res === null || (Array.isArray(res) && !res.length)) return new Response(null, { status: 202 });\n  return Response.json(res, { headers: { \"cache-control\": \"no-store\" } });\n}\n","platform/migrations/0003_keys_and_deploys.sql":"-- Edit keys for MCP writes, kit links for tenants, and deploy requests.\nALTER TABLE kits ADD COLUMN key_hash TEXT;\nALTER TABLE kits ADD COLUMN updated_at INTEGER;\nALTER TABLE tenants ADD COLUMN kit_id TEXT;\nCREATE TABLE IF NOT EXISTS deploy_requests (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  kit_id TEXT NOT NULL REFERENCES kits(id),\n  status TEXT NOT NULL CHECK (status IN ('requested', 'building', 'live', 'failed')),\n  created_at INTEGER NOT NULL\n);\n"});
+    f["platform/migrations/0004_tenant_setup.sql"] = "-- One-time owner setup links for EmDash sites.\nALTER TABLE tenants ADD COLUMN setup_hash TEXT;\n";
+    f["platform/scripts/bootstrap.sh"] = `#!/bin/sh
+# ${head(k, "script")}
+# One-time setup of the bitkit platform in YOUR Cloudflare account (npx cf@latest auth login first).
+# Workers for Platforms needs a paid plan with the add-on enabled.
+set -eu
+cd "$(dirname "$0")/.."
+npx cf@latest workers-for-platforms dispatch-namespaces create --name ${JSON.stringify(ns)}
+npx cf@latest d1 create bitkit-registry
+npx cf@latest r2 buckets create bitkit-kits
+npx cf@latest d1 migrations apply bitkit-registry
+echo "Set secrets CF_ACCOUNT_ID, CF_PLATFORM_TOKEN (scoped: Workers Scripts, KV, D1, R2 edit) and PUBLISH_TOKEN, then: npx cf@latest deploy"
+`;
+    f["scripts/deploy-tenant.sh"] = `#!/bin/sh
+# ${head(k, "script")}
+# Deploys this brand's Worker into the bitkit platform's dispatch namespace.
+set -eu
+cd "$(dirname "$0")/.."
+bun scripts/validate-kit.ts
+npx cf@latest deploy --dispatch-namespace ${JSON.stringify(ns)}
+`;
+    f["platform/README.md"] = `# bitkit on Cloudflare for Platforms
+
+${k.brand.name} selected the **${HOSTING.find((h) => h.id === k.hosting.model)?.name}** hosting model.
+
+| Model | Who owns the Cloudflare account | How code gets there |
+| --- | --- | --- |
+${HOSTING.map((h) => `| ${h.name} | ${h.id === "platform" ? "bitkit (platform account)" : "The brand owner"} | ${h.id === "handoff" ? "Temporary account, claimed by the owner within 60 minutes" : h.id === "platform" ? `\`cf deploy --dispatch-namespace ${ns}\` into a Workers for Platforms namespace` : "Owner connects their account (Cloudflare OAuth client), then CI deploys"} |`).join("\n")}
+
+## Pieces
+
+- \`src/index.ts\` routes \`<slug>.${zone}\` (and mapped custom hostnames) to tenant Workers through the \`TENANTS\` dispatch namespace binding.
+- \`LOADER\` (Dynamic Workers) runs generated snippets in fresh isolates with \`globalOutbound: null\`.
+- \`ProvisionTenant\` is a Workflow: creates KV, D1, and R2 per tenant in the platform account, registers the tenant, waits for the tenant deploy, then activates it.
+- \`scripts/bootstrap.sh\` creates the namespace and registry once.
+
+## Boundaries
+
+The platform provisions Cloudflare resources and deploys code. It never registers domains, creates social accounts, or accepts terms for an owner. Domain search (\`scripts/find-domain.sh\`) is read-only; the owner registers the domain they choose.
+`;
+    return f;
+  }
+
+  /* ---------- schema and validator ---------- */
+  function schemaJson() {
+    const hex = { type: "string", pattern: "^#[0-9a-fA-F]{6}$" };
+    const pal = { type: "object", required: ["primary", "secondary", "accent", "ink", "paper"], properties: { primary: hex, secondary: hex, accent: hex, ink: hex, paper: hex } };
+    return JSON.stringify({ $schema: "https://json-schema.org/draft/2020-12/schema", $id: "https://app.bitkit.sh/schemas/bitkit.kit.v1.json", title: "bitkit identity kit", type: "object",
+      required: ["schema", "brand", "handle", "platforms", "palette", "type", "mark", "voice"],
+      properties: {
+        schema: { const: "bitkit.kit/v1" }, generatedAt: { type: "string", format: "date-time" },
+        brand: { type: "object", required: ["name", "slug"], properties: { name: { type: "string", minLength: 1 }, slug: { type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, tagline: { type: "string", maxLength: 90 }, category: { type: "string" }, keywords: { type: "array", items: { type: "string" }, maxItems: 5 } } },
+        handle: { type: "object", required: ["primary"], properties: { primary: { type: "string", minLength: 1 }, overrides: { type: "object", additionalProperties: { type: "string" } } } },
+        platforms: { type: "array", items: { type: "object", required: ["id", "handle", "bio", "bioLimit"], properties: { id: { type: "string" }, handle: { type: "string" }, bio: { type: "string" }, bioLimit: { type: "integer" } } } },
+        palette: { ...pal, properties: { ...pal.properties, dark: pal } },
+        type: { type: "object", required: ["heading", "body"] }, shape: { type: "object", properties: { radius: { type: "number", minimum: 0, maximum: 64 } } },
+        mark: { type: "object", required: ["kind", "glyphs"], properties: { kind: { enum: ["seal", "circle", "square"] }, glyphs: { type: "string", maxLength: 3 } } },
+        voice: { type: "object", required: ["bio"], properties: { formality: { type: "number", minimum: 0, maximum: 1 }, playfulness: { type: "number", minimum: 0, maximum: 1 }, boldness: { type: "number", minimum: 0, maximum: 1 } } },
+        modules: { type: "array", items: { enum: MODULES.map((m) => m.id) } }
+      } }, null, 2) + "\n";
+  }
+  const validator = (k) => `// ${head(k, "script")}
+// Dependency-free checks for bitkit.kit.json. Exits non-zero with one line per problem.
+import kit from "../bitkit.kit.json" with { type: "json" };
+
+const problems: string[] = [];
+const hex = /^#[0-9a-fA-F]{6}$/;
+if (kit.schema !== "bitkit.kit/v1") problems.push("schema must be bitkit.kit/v1");
+if (!kit.brand?.name) problems.push("brand.name is required");
+if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(kit.brand?.slug ?? "")) problems.push("brand.slug must be kebab-case");
+for (const role of ["primary", "secondary", "accent", "ink", "paper"] as const) {
+  if (!hex.test(kit.palette?.[role] ?? "")) problems.push(\`palette.\${role} must be a 6-digit hex color\`);
+}
+for (const p of kit.platforms ?? []) {
+  if (p.bio.length > p.bioLimit) problems.push(\`platforms.\${p.id}.bio is \${p.bio.length} characters, limit \${p.bioLimit}\`);
+}
+if (problems.length) {
+  for (const p of problems) console.error(\`bitkit.kit.json: \${p}\`);
+  process.exit(1);
+}
+console.log(\`bitkit.kit.json OK: \${kit.brand.name}, \${kit.platforms.length} platforms\`);
+`;
+
+  /* ---------- GitHub Actions ---------- */
+  function workflows(k) {
+    const f = {}, A = V.actions;
+    const setup = [`      - uses: ${A.checkout}`, `        with:`, `          persist-credentials: false`, `      - uses: ${A.bun}`, `      - uses: ${A.node}`, `        with:`, `          node-version: "${V.node}"`];
+    if (has(k, "ci", "ci")) f[".github/workflows/check.yml"] = [`# ${head(k, "file")}`, `name: Check`, `on:`, `  push:`, `    branches: [main]`, `  pull_request:`, `permissions:`, `  contents: read`, `jobs:`, `  check:`, `    runs-on: ubuntu-latest`, `    steps:`, ...setup,
+      `      - run: bun scripts/validate-kit.ts`, ...(has(k, "devex", "oxlint") ? [`      - run: bunx oxlint@${V.oxlint} .`] : []), ...(has(k, "devex", "biome") ? [`      - run: bunx @biomejs/biome@${V.biome} ci .`] : []), `      - run: bun test`, ...(k.modules.includes("deploy") ? [`      - run: npm install`, `      - run: npx cf build`] : []), ``].join("\n");
+    if (has(k, "ci", "deploy")) f[".github/workflows/deploy.yml"] = [`# ${head(k, "file")}`, `# Needs repository secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, which you create.`, `name: Deploy`, `on:`, `  push:`, `    branches: [main]`, `  workflow_dispatch:`, `permissions:`, `  contents: read`, `concurrency:`, `  group: deploy-production`, `  cancel-in-progress: false`, `jobs:`, `  deploy:`, `    runs-on: ubuntu-latest`, `    environment: production`, `    steps:`, ...setup,
+      `      - run: bun scripts/validate-kit.ts`, `      - run: npm install`, ...(k.hosting.model === "platform" ? [`      - run: npx cf deploy --dispatch-namespace ${k.hosting.namespace}`] : [`      - run: npx cf deploy`]), `        env:`, `          CLOUDFLARE_API_TOKEN: ${GH("secrets.CLOUDFLARE_API_TOKEN")}`, `          CLOUDFLARE_ACCOUNT_ID: ${GH("secrets.CLOUDFLARE_ACCOUNT_ID")}`, ``].join("\n");
+    if (has(k, "ci", "preview")) f[".github/workflows/pr-build.yml"] = [`# ${head(k, "file")}`, `name: Pull request build`, `on:`, `  pull_request:`, `permissions:`, `  contents: read`, `jobs:`, `  build:`, `    runs-on: ubuntu-latest`, `    steps:`, ...setup, `      - run: npm install`, `      - run: npx cf build`, `      - run: npx cf deploy --dry-run`, ``].join("\n");
+    if (has(k, "ci", "actions-audit")) f[".github/workflows/actions-audit.yml"] = [`# ${head(k, "file")}`, `name: Workflow audit`, `on:`, `  pull_request:`, `    paths: [".github/workflows/**"]`, `permissions:`, `  contents: read`, `jobs:`, `  audit:`, `    runs-on: ubuntu-latest`, `    steps:`,
+      `      - uses: ${A.checkout}`, `        with:`, `          persist-credentials: false`, `      - uses: ${A.mise}`, `        with:`, `          install_args: actionlint zizmor`, `          mise_toml: |`, `            [tools]`, `            actionlint = "latest"`, `            zizmor = "latest"`, `      - run: actionlint`, `      - run: zizmor .github/workflows`, ``].join("\n");
+    return f;
+  }
+
+  /* ---------- MCP ---------- */
+  function mcpFiles(k) {
+    const servers = Object.fromEntries(MCP.filter((m) => k.mcp.includes(m.id)).map((m) => [m.id, { type: "http", url: m.url }]));
+    return { ".mcp.json": JSON.stringify({ mcpServers: servers }, null, 2) + "\n" };
+  }
+
+  /* ---------- skills ---------- */
+  function skillFiles(k, root = ".claude/skills") {
+    const f = {}, s = S(k), sk = (id, desc, body) => { f[`${root}/${id}/SKILL.md`] = `---\nname: ${id}\ndescription: ${yamlStr(desc)}\n---\n\n${body}\n`; };
+    if (has(k, "skills", "brand-voice")) sk(`${s}-brand-voice`, `Write any public copy for ${k.brand.name} (bios, posts, captions, site text) in the brand voice from bitkit.kit.json. Use whenever text will appear under the brand's name.`,
+      `# ${k.brand.name} voice\n\nRead \`bitkit.kit.json\` first; it wins over this file if they differ.\n\n- Scales (0 formal/serious/reserved, 1 casual/playful/bold): formality ${k.voice.formality}, playfulness ${k.voice.playfulness}, boldness ${k.voice.boldness}.\n- We say: ${k.voice.do.join("; ") || "none listed"}.\n- We avoid: ${k.voice.dont.join("; ") || "none listed"}.\n- Bio limits per platform live in \`platforms[].bioLimit\`; never exceed them.\n\nWhen copy for a platform changes, update \`voice.bios.<platform>\` in the kit and regenerate rather than editing generated files.`);
+    if (has(k, "skills", "brand-tokens")) sk(`${s}-brand-tokens`, `Apply ${k.brand.name}'s palette, typefaces, radius, and mark to any UI, document, or image. Use when styling anything for the brand.`,
+      `# ${k.brand.name} tokens\n\nUse \`brand/tokens.css\` custom properties (\`--brand-primary\`, \`--brand-ink\`, \`--brand-paper\`, \`--brand-font-heading\`, \`--brand-radius\`) instead of literal values. \`brand/tokens.json\` carries the same values in the Design Tokens format.\n\n- Text on paper uses ink. Text on primary uses ${onColor(k.palette.primary)}.\n- Keep body text at a contrast ratio of 4.5:1 or more; check new pairs before using them.\n- The mark is \`brand/assets/mark.svg\`; do not redraw it.`);
+    if (has(k, "skills", "kit-editor")) sk("bitkit-kit-editor", `Edit bitkit.kit.json (the single source of truth for this brand) and regenerate the bundle. Use when asked to change the brand name, handle, platforms, palette, type, voice, tooling, workflows, MCP servers, skills, or agents.`,
+      `# Editing the kit\n\n1. Change only \`bitkit.kit.json\`. Every other generated file names it as its source.\n2. Run \`bun scripts/validate-kit.ts\`.\n3. Regenerate: open the bitkit builder, import \`bitkit.kit.json\`, export, and replace the bundle; or ask Claude to update the kit in the bitkit artifact.\n4. Commit the kit and the regenerated files together.\n\nNever create, sign in to, or post on third-party accounts. Account creation belongs to the brand owner; see \`ACCOUNTS.md\`.`);
+    if (has(k, "skills", "account-launch")) sk("account-launch-prep", `Prepare the brand owner to create their own platform accounts: profile sheets, ACCOUNTS.md order, copy-ready fields. Use for launch preparation. This skill never creates accounts.`,
+      `# Account launch preparation\n\nYou prepare; the owner creates.\n\n- Keep \`ACCOUNTS.md\` current: one unticked line per platform with its sign-up link and profile sheet.\n- Make every field in \`brand/platforms/*.md\` copy-ready and within limits.\n- Never fill a sign-up form, solve a CAPTCHA, accept terms, or store a platform password.\n- When the owner reports an account as created, tick its line and note the date.`);
+    if (has(k, "skills", "cf-preview-claim")) sk("cf-preview-claim", `Deploy the brand site to a Cloudflare temporary preview account and hand the claim link to the brand owner safely. Use for any preview deploy.`,
+      `# Temporary previews\n\nBased on https://developers.cloudflare.com/workers/platform/claim-deployments/ (Wrangler ${V.wrangler}; 4.102.0 or later works).\n\n- Run \`just preview\` (\`scripts/preview-temporary.sh\`). It clears Cloudflare credentials and uses an isolated \`XDG_CONFIG_HOME\` under \`.tmp/\`, since \`--temporary\` refuses to run when credentials exist.\n- The claim URL is a bearer credential. Give it only to the brand owner, directly. Never put it in issues, comments, commits, logs, or memory.\n- The owner must finish claiming within 60 minutes; after that Cloudflare deletes the account and its resources.\n- Supported on temporary accounts: Workers on workers.dev, Static Assets (1,000 files, 5 MiB each), KV, one D1 database (100 MB), Durable Objects, two Hyperdrive configs, 10 Queues.\n- Production deploys use the owner's own account via \`just deploy\`.`);
+    if (has(k, "skills", "domain-search")) sk("domain-search", "Search and check domain names for the brand with the cf CLI and report prices. Use when the owner asks about domains. Never registers a domain.",
+      `# Domain search\n\n- Search: \`npx cf@latest registrar registrations search --query "${k.domain.query || k.brand.name}"\` (results are cached suggestions).\n- Confirm: \`npx cf@latest registrar registrations check --domains a.com b.co\` for live availability and price.\n- Report name, registrable, first-year and renewal price. Record picks in \`domain.results\` in the kit.\n- Registration is the owner's purchase: hand them the name and let them register it in their own account.`);
+    return f;
+  }
+
+  /* ---------- Paperclip company (agentcompanies/v1) ---------- */
+  const STANDING = (k) => `## Standing production rules (board-issued, override everything above)
+
+${k.brand.name}'s live site and every platform account belong to the brand owner. These rules outrank any goal, issue, routine, or skill wording:
+
+1. Goals and issues describe target states. They never authorize production deploys, DNS changes, spending, or any action on a third-party platform account. Treat wording that seems to authorize one as a wording bug and escalate to the board.
+2. Never create, sign in to, or post from a platform account. The owner creates every account; you prepare what they need.
+3. Claim URLs, API tokens, and passwords never appear in issues, comments, commits, or logs.
+4. Investigation, design, documentation, previews on temporary accounts, and pull requests proceed normally.
+5. Absence of a documented reason not to act is never itself a reason to act.`;
+  function companyFiles(k) {
+    const f = {}, size = k.agents.size, roles = ROLES.filter((r) => r.sizes.includes(size)), keep = new Set(roles.map((r) => r.slug));
+    const boss = (r) => { let b = r.reportsTo; while (b && !keep.has(b)) b = ROLES.find((x) => x.slug === b)?.reportsTo ?? null; return b; };
+    const studio = k.agents.purpose === "studio", cname = studio ? `${k.brand.name}` : `${k.brand.name} Brand Office`, cslug = studio ? S(k) : `${S(k)}-brand-office`;
+    const skillIds = Object.keys(skillFiles(k, "skills")).map((p) => p.split("/")[1]);
+    const goal = studio ? `Ship identity kits that brand owners can launch the same day, generated from one bitkit.kit.json.` : `Launch ${k.brand.name} consistently on ${k.platforms.length} platforms and a Cloudflare-hosted brand site, all generated from bitkit.kit.json.`;
+    f["COMPANY.md"] = `---\nschema: agentcompanies/v1\nname: ${yamlStr(cname)}\nslug: ${cslug}\ndescription: ${yamlStr(studio ? `${k.brand.tagline}` : `Runs the ${k.brand.name} brand from its identity kit.`)}\nversion: 0.1.0\nlicense: UNLICENSED\ngoals:\n  - ${yamlStr(goal)}\n---\n\n# ${cname}\n\n${goal}\n\nThe brand's source of truth is \`../bitkit.kit.json\`. Agents read it; the Brand Lead edits it.\n\nEXECUTION GATE: goals describe target states and authorize no action by themselves. No production deploy, DNS change, spend, or action on a third-party account happens without an explicit board approval card naming the exact action. Every platform account is created by the brand owner.\n\nGenerated by bitkit from bitkit.kit.json at ${k.generatedAt}. Format: [Agent Companies](https://agentcompanies.io/specification). Runtime: [Paperclip](https://github.com/paperclipai/paperclip).\n`;
+    const teams = { creative: "Creative", engineering: "Engineering", delivery: "Delivery and Trust" };
+    for (const [t, name] of Object.entries(teams)) {
+      const members = roles.filter((r) => r.team === t); if (!members.length) continue;
+      const mgr = members.find((r) => !members.some((m) => m.slug === boss(r))) || members[0];
+      f[`teams/${t}/TEAM.md`] = `---\nname: ${yamlStr(name)}\nslug: ${t}\nmanager: ../../agents/${mgr.slug}/AGENTS.md\nincludes:\n${members.filter((m) => m !== mgr).map((m) => `  - ../../agents/${m.slug}/AGENTS.md`).join("\n") || "  []"}\n---\n\n# ${name}\n\n${members.map((m) => `- ${m.name}: ${m.job}`).join("\n")}\n`;
+    }
+    for (const r of roles) {
+      const sk = (r.skills || []).map((id) => skillIds.find((x) => x === id || x.endsWith(`-${id}`) || (id === "kit-editor" && x === "bitkit-kit-editor") || (id === "account-launch" && x === "account-launch-prep"))).filter(Boolean);
+      f[`agents/${r.slug}/AGENTS.md`] = `---\nname: ${yamlStr(r.name)}\ntitle: ${yamlStr(r.title)}\nreportsTo: ${boss(r) ?? "null"}\n${sk.length ? `skills:\n${sk.map((s) => `  - ${s}`).join("\n")}\n` : ""}---\n\nYou are the ${r.name} at ${cname}.\n\nRole: ${r.job}\n\n## Context you must hold\n\n- Source of truth: \`bitkit.kit.json\` (schema bitkit.kit/v1). Brand: ${k.brand.name}, primary handle @${k.handle.primary}, ${k.platforms.length} platforms: ${k.platforms.map((p) => p.name).join(", ")}.\n- Generated files name their source; change the kit, then regenerate.\n- Hosting: Cloudflare Worker \`${k.deploy.worker}\` configured in \`cloudflare.config.ts\` (use the cf CLI), services: ${k.services.join(", ") || "none"}; model: ${k.hosting.model}${k.hosting.model === "platform" ? " (namespace " + k.hosting.namespace + ")" : ""}. Previews use temporary accounts.\n- Domains: search with cf; the owner registers.\n- Accounts on every platform are created by the brand owner. \`ACCOUNTS.md\` tracks them.\n\n## What triggers you\n\n${r.triggers}\n\n## What you do\n\n${r.does}\n\n## What you produce\n\n${r.produces}\n\n## Who you hand off to\n\n${r.handoff}\n\n${STANDING(k)}\n`;
+    }
+    const projects = [
+      { slug: "brand-system", name: "Brand system", owner: "brand-lead", desc: "Keep bitkit.kit.json, tokens, mark, and profile sheets correct and consistent.", tasks: [["Audit contrast and handle rules", "Run the kit validator and contrast checks; file findings with the failing pairs."], ["Review platform catalog", "Check each selected platform's handle, bio, and image rules against its current help pages; propose kit changes."]] },
+      { slug: "web-presence", name: "Web presence", owner: "platform-engineer", desc: "The Cloudflare-hosted brand site generated from the kit.", tasks: [["Preview the brand site", "Run just preview and verify the page renders offline-safe; hand the claim link to the owner directly."], ["Prepare production deploy", "PRODUCTION GATE: investigation and design only until a board approval card names the exact deploy. Confirm wrangler.jsonc and deploy secrets are ready."]] },
+      { slug: "dev-platform", name: "Dev platform", owner: "platform-engineer", desc: "Tooling, workflows, MCP config, and skills in the repository.", tasks: [["Verify pins", `Confirm Action majors (${Object.values(V.actions).join(", ")}) and tool versions are current and at least 14 days old; open a pull request for updates.`]] },
+      { slug: "account-launch", name: "Account launch", owner: "delivery-lead", desc: "Everything the owner needs to create accounts personally.", tasks: [["Prepare ACCOUNTS.md", "Make sure every selected platform has a sign-up link and a complete profile sheet. Do not create any account."]] }
+    ];
+    if (studio) projects.push({ slug: "kit-builder", name: "Kit builder", owner: "cto", desc: "The bitkit wizard (web and A2UI) and its generators.", tasks: [["Keep generators byte-stable", "Add a test that two exports of the same kit differ only in generatedAt."]] });
+    const own = (o) => (keep.has(o) ? o : roles.find((r) => r.role === "ceo").slug);
+    for (const p of projects) {
+      f[`projects/${p.slug}/PROJECT.md`] = `---\nname: ${yamlStr(p.name)}\ndescription: ${yamlStr(p.desc)}\nowner: ${own(p.owner)}\n---\n\n${p.desc}\n`;
+      p.tasks.forEach(([t, body]) => { f[`projects/${p.slug}/tasks/${slugify(t)}/TASK.md`] = `---\nname: ${yamlStr(t)}\nproject: ${p.slug}\n---\n\n${body}\n`; });
+    }
+    const routines = [["weekly-brand-review", "Weekly brand review", "brand-system", "0 9 * * 1", "Compare live profiles the owner reports against the kit and list drift."], ["weekly-pin-review", "Weekly pin review", "dev-platform", "0 10 * * 1", "Check Action majors and tool pins; propose updates older than 14 days."]];
+    for (const [slug, name, proj, , body] of routines) f[`tasks/${slug}/TASK.md`] = `---\nname: ${yamlStr(name)}\nproject: ${proj}\nrecurring: true\n---\n\n${body}\n`;
+    Object.assign(f, skillFiles(k, "skills"));
+    const agentsExt = roles.map((r) => `  ${r.slug}:\n    role: ${r.role}\n    icon: ${r.icon}\n    adapter:\n      type: claude_local\n      config:\n        model: ${r.model}\n    runtime:\n      heartbeat:\n        enabled: false\n        wakeOnDemand: true\n    budgetMonthlyCents: ${k.agents.budgetCents}\n    inputs:\n      env:\n        GH_TOKEN:\n          kind: secret\n          requirement: optional\n        CLAUDE_CODE_OAUTH_TOKEN:\n          kind: secret\n          requirement: optional`).join("\n");
+    f[".paperclip.yaml"] = `# Paperclip vendor extension. Routines arrive paused; the board enables them.\nschema: paperclip/v1\ncompany:\n  logoPath: assets/mark.svg\n  requireBoardApprovalForNewAgents: true\nagents:\n${agentsExt}\nprojects:\n${projects.map((p) => `  ${p.slug}:\n    leadAgentSlug: ${own(p.owner)}\n    status: planned`).join("\n")}\nroutines:\n${routines.map(([slug, , , cron]) => `  ${slug}:\n    status: paused\n    triggers:\n      - kind: schedule\n        enabled: false\n        cronExpression: ${yamlStr(cron)}\n        timezone: ${k.agents.timezone}`).join("\n")}\n`;
+    f["assets/mark.svg"] = k.mark.svg + "\n";
+    f["README.md"] = `# ${cname}\n\n${goal}\n\n## Org chart\n\n| Agent | Title | Reports to | Skills |\n| --- | --- | --- | --- |\n${roles.map((r) => `| ${r.name} | ${r.title} | ${boss(r) ?? "board"} | ${(r.skills || []).join(", ") || "none"} |`).join("\n")}\n\n## Import\n\n${fence("sh", `bunx paperclipai@${V.paperclip} company import ./company --target new --dry-run\nbunx paperclipai@${V.paperclip} company import ./company --target new`)}\n\nAfter import: seed the \`GH_TOKEN\` and \`CLAUDE_CODE_OAUTH_TOKEN\` secrets, approve each agent, then enable routines when you want them. No Cloudflare or platform credentials belong in this company.\n`;
+    const out = {}; for (const [p, v] of Object.entries(f)) out[`company/${p}`] = v; return out;
+  }
+
+  /* ---------- A2UI ---------- */
+  function a2uiFiles(k) {
+    const V9 = "v0.9", CAT = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json", sid = `bitkit_${S(k).replace(/-/g, "_")}`;
+    const C = [], tabs = [], add = (c) => (C.push(c), c.id);
+    const txt = (id, text, variant) => add({ id, component: "Text", text, ...(variant ? { variant } : {}) });
+    const field = (id, label, path) => add({ id, component: "TextField", label, value: { path } });
+    const section = (id, title, kids) => (add({ id: `${id}_col`, component: "Column", children: kids }), tabs.push({ title, child: `${id}_col` }));
+    section("brand", "Brand", [field("f_name", "Brand name", "/kit/brand/name"), field("f_tag", "Tagline", "/kit/brand/tagline"), field("f_handle", "Primary handle", "/kit/handle/primary")]);
+    section("platforms", "Platforms", [add({ id: "f_plat", component: "ChoicePicker", label: "Platforms", variant: "multipleSelection", displayStyle: "chips", options: PLATFORMS.map((p) => ({ label: p.name, value: p.id })), value: { path: "/kit/platforms" } })]);
+    section("look", "Look", ["primary", "secondary", "accent", "ink", "paper"].map((n) => field(`f_${n}`, `${n} color (hex)`, `/kit/palette/${n}`)).concat([field("f_glyphs", "Monogram letters", "/kit/mark/glyphs")]));
+    section("voice", "Voice", [add({ id: "f_form", component: "Slider", label: "Formal to casual", min: 0, max: 1, value: { path: "/kit/voice/formality" } }), add({ id: "f_play", component: "Slider", label: "Serious to playful", min: 0, max: 1, value: { path: "/kit/voice/playfulness" } }), field("f_bio", "Bio", "/kit/voice/bio")]);
+    section("stack", "Dev kit", [
+      add({ id: "f_svc", component: "ChoicePicker", label: "Cloudflare services", variant: "multipleSelection", displayStyle: "chips", options: SERVICES.map((m) => ({ label: m.name, value: m.id })), value: { path: "/kit/services" } }),
+      field("f_domain", "Domain (you register it)", "/kit/deploy/domain"),
+      add({ id: "f_mods", component: "ChoicePicker", label: "Bundle modules", variant: "multipleSelection", options: MODULES.map((m) => ({ label: m.name, value: m.id })), value: { path: "/kit/modules" } }),
+      add({ id: "f_ci", component: "ChoicePicker", label: "GitHub Actions", variant: "multipleSelection", options: WORKFLOWS.map((m) => ({ label: m.name, value: m.id })), value: { path: "/kit/ci" } }),
+      add({ id: "f_mcp", component: "ChoicePicker", label: "MCP servers", variant: "multipleSelection", options: MCP.map((m) => ({ label: m.name, value: m.id })), value: { path: "/kit/mcp" } }),
+      add({ id: "f_sk", component: "ChoicePicker", label: "Agent skills", variant: "multipleSelection", options: SKILLS.map((m) => ({ label: m.name, value: m.id })), value: { path: "/kit/skills" } })]);
+    txt("export_label", "Export bundle"); add({ id: "export_btn", component: "Button", child: "export_label", variant: "primary", action: { event: { name: "bitkit.export", context: { kit: { path: "/kit" } } } } });
+    txt("title", `# ${k.brand.name} identity kit`, "h2"); txt("note", "Edits change the kit. Account creation stays with you.", "caption");
+    add({ id: "tabs", component: "Tabs", tabs });
+    C.unshift({ id: "root", component: "Card", child: "main" }, { id: "main", component: "Column", children: ["title", "note", "tabs", "export_btn"] });
+    const draft = JSON.parse(JSON.stringify({ brand: k.brand, handle: { primary: k.handle.primary }, platforms: k.platforms.map((p) => p.id), palette: Object.fromEntries(["primary", "secondary", "accent", "ink", "paper"].map((n) => [n, k.palette[n]])), mark: { glyphs: k.mark.glyphs }, voice: { formality: k.voice.formality, playfulness: k.voice.playfulness, bio: k.voice.bio }, modules: k.modules, ci: k.ci, mcp: k.mcp, skills: k.skills, services: k.services, deploy: { domain: k.deploy.domain } }));
+    const jsonl = [
+      { version: V9, createSurface: { surfaceId: sid, catalogId: CAT, sendDataModel: true, theme: { primaryColor: k.palette.primary, agentDisplayName: "bitkit" } } },
+      { version: V9, updateComponents: { surfaceId: sid, components: C } },
+      { version: V9, updateDataModel: { surfaceId: sid, value: { kit: draft } } }
+    ].map((m) => JSON.stringify(m)).join("\n") + "\n";
+    return { "a2ui/wizard.jsonl": jsonl, "a2ui/README.md": `# A2UI wizard\n\n\`wizard.jsonl\` is the bitkit wizard as an [A2UI](https://a2ui.org) ${V9} surface on the Basic Catalog, so any A2UI renderer (web, mobile, desktop) can show it without running code.\n\n1. The agent streams the three messages: \`createSurface\`, \`updateComponents\`, \`updateDataModel\`.\n2. Inputs bind to \`/kit/...\` in the data model; \`sendDataModel\` is on, so edits travel back with actions.\n3. **Export bundle** sends the \`bitkit.export\` event with the edited kit. The agent merges it into \`bitkit.kit.json\`, regenerates the bundle with the same generators as the web builder, and replies with \`updateDataModel\`.\n\nThe Basic Catalog has no color picker or live preview; the web builder covers those. Account creation is never an action in this surface.\n` };
+  }
+
+  /* ---------- Claude Design System seed (the Design System artifact type's project/ files) ---------- */
+  function designSystemFiles(k) {
+    const p = k.palette, d = p.dark, base = "design-system/project/";
+    const surface2 = (x, y, t) => mix(x, y, t);
+    const colors = [
+      ["paper", p.paper, d.paper, "Page background."],
+      ["raised", surface2(p.paper, "#ffffff", 0.6), surface2(d.paper, d.ink, 0.06), "Cards, panels, and menus on paper."],
+      ["ink", p.ink, d.ink, "Text and icons on paper and raised."],
+      ["ink-muted", mix(p.ink, p.paper, 0.35), mix(d.ink, d.paper, 0.35), "Secondary text on paper; keep it at 4.5:1 or more."],
+      ["line", mix(p.ink, p.paper, 0.85), mix(d.ink, d.paper, 0.82), "Borders and dividers."],
+      ["primary", p.primary, d.primary, "Primary buttons, links, the mark, focus rings."],
+      ["on-primary", onColor(p.primary), onColor(d.primary), "Text and icons on primary."],
+      ["secondary", p.secondary, d.secondary, "Supporting fills and illustrations."],
+      ["accent", p.accent, d.accent, "Highlights and badges; pair with text, never alone."]
+    ];
+    const fam = (n) => `"${n}", ${(FONTS.find((f) => f.name === n)?.fb) || "system-ui, sans-serif"}`;
+    const s = k.type.scale, px = (n) => `${Math.round(16 * Math.pow(s, n))}px`, lh = (n) => `${Math.round(16 * Math.pow(s, n) * (n > 1 ? 1.15 : 1.5))}px`;
+    const r = k.shape.radius;
+    const tokens = {
+      name: k.brand.name, version: 1,
+      meta: { source: "bitkit.kit.json", generatedAt: k.generatedAt },
+      color: { themes: [{ id: "light", name: "Light" }, { id: "dark", name: "Dark" }], tokens: colors.map(([name, light, dark, usage]) => ({ name, value: { light, dark }, usage })) },
+      type: {
+        fonts: [],
+        families: { heading: fam(k.type.heading), body: fam(k.type.body), mono: "ui-monospace, \"SF Mono\", Menlo, monospace" },
+        groups: [
+          { name: "Display", family: "heading", styles: [{ name: "hero", fontSize: px(4), lineHeight: lh(4), fontWeight: 700 }, { name: "title", fontSize: px(2), lineHeight: lh(2), fontWeight: 700 }] },
+          { name: "Text", family: "body", styles: [{ name: "lede", fontSize: px(1), lineHeight: lh(1), fontWeight: 400 }, { name: "body", fontSize: "16px", lineHeight: "24px", fontWeight: 400 }, { name: "label", fontSize: "14px", lineHeight: "20px", fontWeight: 600 }, { name: "fine", fontSize: "12px", lineHeight: "16px", fontWeight: 400 }] },
+          { name: "Mono", family: "mono", styles: [{ name: "handle", fontSize: "14px", lineHeight: "20px", fontWeight: 500 }] }
+        ]
+      },
+      spacing: { tokens: [["space-2", "8px", "Gaps inside controls."], ["space-4", "16px", "Card padding, gaps between controls."], ["space-6", "24px", "Gaps between cards."], ["space-10", "40px", "Section padding."]].map(([name, value, usage]) => ({ name, value, usage })) },
+      radius: { tokens: [["radius-s", `${Math.max(2, Math.round(r / 2))}px`, "Chips and small controls."], ["radius-m", `${r}px`, "Buttons, inputs, cards."], ["radius-l", `${Math.round(r * 1.6)}px`, "Panels and dialogs."]].map(([name, value, usage]) => ({ name, value, usage })) }
+    };
+    const v = (name, light) => `var(--${name}, ${light})`;
+    const C = Object.fromEntries(colors.map(([n, l]) => [n, v(n, l)]));
+    const doc = (body, extra = "") => `<style>body{margin:0;font-family:${fam(k.type.body).replace(/"/g, "'")};color:${C.ink};background:${C.paper}}${extra}</style>\n${body}\n`;
+    const files = {};
+    files[base + "design-system.json"] = JSON.stringify({ v: 3, layout: "files", createdOnFiles: { v: 1, at: k.generatedAt }, title: k.brand.name, namespace: k.brand.slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(""), libraries: [], sections: {}, groups: ["Logos"], assetGroups: { Logos: { name: "Logos", tile: "l", order: [], files: {} } }, blobs: {}, docs: { readme: "project/README.md", sections: [] }, lastChange: { by: "bitkit", at: k.generatedAt, via: "bitkit generator", note: "Seeded from bitkit.kit.json." } }, null, 2) + "\n";
+    files[base + "tokens.json"] = JSON.stringify(tokens, null, 2) + "\n";
+    files[base + "README.md"] = [`# ${k.brand.name}`, ``, k.brand.tagline, ``, `This design system is generated from \`bitkit.kit.json\` and edited in Claude. The live site is ${k.deploy.domain ? `https://${k.deploy.domain}` : "the brand site"}; this reference lives at ${k.deploy.domain ? `https://kit.${k.deploy.domain}` : "the kit site"}.`, ``,
+      `## Content`, ``, `- Voice: ${k.voice.formality < 0.5 ? "more formal" : "more casual"}, ${k.voice.playfulness < 0.5 ? "more serious" : "more playful"}, ${k.voice.boldness < 0.5 ? "more reserved" : "bolder"}.`, ...k.voice.do.map((x) => `- Say: ${x}.`), ...k.voice.dont.map((x) => `- Avoid: ${x}.`), `- Bio: ${k.voice.bio}`, ``,
+      `## Color`, ``, `- \`paper\` is the page; \`raised\` holds cards and panels; text is \`ink\`, secondary text \`ink-muted\`.`, `- \`primary\` is the one strong color: primary buttons, links, the mark, focus rings. Text on it is \`on-primary\`.`, `- \`accent\` highlights and always travels with a word.`, `- Light and dark themes define the same tokens. Ink on paper: ${contrast(p.ink, p.paper).toFixed(1)}:1 light, ${contrast(d.ink, d.paper).toFixed(1)}:1 dark.`, ``,
+      `## Type`, ``, `- ${k.type.heading} for headings (\`hero\`, \`title\`), ${k.type.body} for text (\`lede\`, \`body\`, \`label\`, \`fine\`), mono for handles and identifiers.`, `- Sentence case everywhere. Handles stay as written: \`@${k.handle.primary}\`.`, ``,
+      `## Shape and space`, ``, `- Radii: \`radius-s\` chips, \`radius-m\` buttons and cards, \`radius-l\` panels.`, `- Spacing: \`space-2\` inside controls, \`space-4\` card padding, \`space-6\` between cards, \`space-10\` sections.`, ``,
+      `## Iconography and mark`, ``, `- The mark is a ${k.mark.kind} monogram reading “${k.mark.glyphs}” in \`primary\` (\`assets/Logos/mark.svg\`). Never redraw or recolor it.`, ``,
+      `## Where the brand lives`, ``, `| Platform | Handle |`, `| --- | --- |`, ...k.platforms.map((x) => `| ${x.name} | @${x.handle} |`), ``].join("\n");
+    files[base + "components/Button/README.md"] = `Buttons start an action and name it with a verb in sentence case.\n\n- Primary: \`primary\` fill, \`on-primary\` text, \`radius-m\`. One per view.\n- Secondary: \`raised\` fill, \`line\` border, \`ink\` text.\n- The consumer provides the label and the click handler.\n`;
+    files[base + "components/Button/preview.html"] = `<!-- @dsCard group="Actions" height=88 -->\n` + doc(`<div class="row"><button class="b p">Order ahead</button><button class="b s">See the menu</button></div>`, `.row{display:flex;gap:12px;padding:20px;flex-wrap:wrap}.b{font:600 15px/1 inherit;padding:12px 18px;border-radius:${r}px;cursor:pointer}.p{background:${C.primary};color:${C["on-primary"]};border:0}.s{background:${C.raised};color:${C.ink};border:1px solid ${C.line}}`);
+    files[base + "components/ProfileCard/README.md"] = `A profile card previews how the brand appears on one platform: mark, name, handle, and the bio at that platform's limit.\n\n- \`raised\` card, \`line\` border, \`radius-l\`.\n- Handle in mono; bio in \`body\`, trimmed at a word break.\n- The consumer provides the platform name, handle, and bio.\n`;
+    const pf = k.platforms[0];
+    files[base + "components/ProfileCard/preview.html"] = `<!-- @dsCard group="Social" height=160 -->\n` + doc(`<article class="c"><div class="m">${markSvg(k, 56)}</div><div><b>${esc(k.brand.name)}</b><div class="h">${esc(pf ? pf.name : "Profile")} · @${esc(pf ? pf.handle : k.handle.primary)}</div><p>${esc(pf ? pf.bio : k.voice.bio)}</p></div></article>`, `.c{display:grid;grid-template-columns:56px 1fr;gap:14px;margin:16px;padding:16px;background:${C.raised};border:1px solid ${C.line};border-radius:${Math.round(r * 1.6)}px}.h{font:500 13px ui-monospace,Menlo,monospace;color:${C["ink-muted"]}}p{margin:6px 0 0;font-size:14px;line-height:20px}`);
+    files[base + "components/Cover/preview.html"] = `<!-- @dsCard group="Cover" height=320 -->\n` + doc(`<section class="cv"><div class="m">${markSvg(k, 96)}</div><h1>${esc(k.brand.name)}</h1><p>${esc(k.brand.tagline)}</p><div class="sw">${["primary", "secondary", "accent", "ink", "paper"].map((n) => `<i style="background:${p[n]}" title="${n}"></i>`).join("")}</div></section>`, `.cv{min-height:320px;box-sizing:border-box;padding:40px;display:grid;align-content:end;gap:10px;background:${C.paper}}h1{margin:0;font:700 ${px(4)}/1.05 ${fam(k.type.heading).replace(/"/g, "'")};letter-spacing:-.02em}p{margin:0;font-size:${px(1)};color:${C["ink-muted"]}}.sw{display:flex;gap:6px;margin-top:8px}.sw i{width:36px;height:36px;border-radius:${Math.max(2, Math.round(r / 2))}px;border:1px solid ${C.line}}`);
+    files[base + "assets/Logos/mark.svg"] = k.mark.svg + "\n";
+    files[base + "assets/Logos/README.md"] = `The ${k.brand.name} mark. Upload \`mark.svg\` as an asset when creating the design system in Claude; use it as is.\n`;
+    files["design-system/CREATE-IN-CLAUDE.md"] = `# Create the ${k.brand.name} design system in Claude\n\nIn Claude, ask:\n\n> Create a Claude Design System titled "${k.brand.name}" from the files in \`design-system/project/\` of my bitkit kit. Upload \`assets/Logos/mark.svg\` as a Logos asset, keep every token value exactly, and write the index last.\n\nThen run \`just publish\` and ask Claude to sync the system to ${k.deploy.domain ? `https://kit.${k.deploy.domain}` : "your kit site"}.\n`;
+    return files;
+  }
+
+  /* ---------- tar + setup script (used by the platform and tests) ---------- */
+  function tar(files, root, mtime = 0) {
+    const enc = new TextEncoder(), chunks = [];
+    const oct = (n, len) => n.toString(8).padStart(len - 1, "0") + "\0";
+    for (const [p, c] of Object.entries(files).sort(([a], [b]) => (a < b ? -1 : 1))) {
+      const body = enc.encode(c), h = new Uint8Array(512);
+      let nm = `${root}/${p}`, prefix = "";
+      if (enc.encode(nm).length > 100) { const i = nm.lastIndexOf("/", 154); prefix = nm.slice(0, i); nm = nm.slice(i + 1); }
+      const put = (str, off, len) => h.set(enc.encode(str).subarray(0, len), off);
+      put(nm, 0, 100); put(oct(p.endsWith(".sh") ? 0o755 : 0o644, 8), 100, 8); put(oct(0, 8), 108, 8); put(oct(0, 8), 116, 8);
+      put(oct(body.length, 12), 124, 12); put(oct(Math.floor(mtime / 1000), 12), 136, 12); h.fill(32, 148, 156); put("0", 156, 1);
+      put("ustar\0", 257, 6); put("00", 263, 2); put("bitkit", 265, 32); put("bitkit", 297, 32); put(prefix, 345, 155);
+      let sum = 0; for (const b of h) sum += b;
+      put(sum.toString(8).padStart(6, "0") + "\0 ", 148, 8);
+      chunks.push(h, body);
+      const pad = (512 - (body.length % 512)) % 512; if (pad) chunks.push(new Uint8Array(pad));
+    }
+    chunks.push(new Uint8Array(1024));
+    const out = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0)); let o = 0;
+    for (const c of chunks) { out.set(c, o); o += c.length; }
+    return out;
+  }
+  function setupScript({ id, slug, name, sha, origin = "https://app.bitkit.sh" }) {
+    const q = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'";
+    return `#!/bin/sh
+# bitkit setup: ${name.replace(/\n/g, " ")} (kit ${id})
+#
+#   curl -fsSL ${origin}/setup/${id} | sh
+#   curl -fsSL ${origin}/setup/${id} | sh -s -- my-folder
+#
+# Read it first if you like:
+#   curl -fsSL ${origin}/setup/${id} -o bitkit-setup.sh && less bitkit-setup.sh && sh bitkit-setup.sh
+#
+# What it does: downloads the kit bundle, checks its SHA-256, unpacks it into a new
+# folder, runs git init, and installs pinned tools if mise is present.
+# What it never does: use sudo, create accounts, register domains, or deploy anything.
+set -eu
+
+main() {
+  ORIGIN="\${BITKIT_ORIGIN:-${origin}}"
+  KIT=${q(id)}
+  SHA=${q(sha)}
+  DIR="\${1:-${slug}}"
+
+  need() { command -v "$1" >/dev/null 2>&1 || { echo "bitkit: this setup needs $1" >&2; exit 1; }; }
+  need curl
+  need tar
+  if command -v sha256sum >/dev/null 2>&1; then sum() { sha256sum "$1" | cut -d ' ' -f 1; }
+  elif command -v shasum >/dev/null 2>&1; then sum() { shasum -a 256 "$1" | cut -d ' ' -f 1; }
+  else echo "bitkit: this setup needs sha256sum or shasum" >&2; exit 1; fi
+
+  if [ -e "$DIR" ]; then
+    echo "bitkit: $DIR already exists. Pick another folder: curl -fsSL $ORIGIN/setup/$KIT | sh -s -- other-folder" >&2
+    exit 1
+  fi
+
+  WORK=".bitkit-$KIT.partial"
+  rm -rf "$WORK"
+  mkdir "$WORK"
+  trap 'rm -rf "$WORK"' EXIT INT TERM
+
+  echo "bitkit: downloading ${name.replace(/"/g, "")}"
+  curl -fsSL "$ORIGIN/kits/$KIT.tar.gz" -o "$WORK/kit.tar.gz"
+  GOT="$(sum "$WORK/kit.tar.gz")"
+  if [ "$GOT" != "$SHA" ]; then
+    echo "bitkit: checksum mismatch (expected $SHA, got $GOT). Nothing was unpacked." >&2
+    exit 1
+  fi
+
+  mkdir "$DIR"
+  tar -xzf "$WORK/kit.tar.gz" -C "$DIR" --strip-components=1
+  cd "$DIR"
+
+  if command -v git >/dev/null 2>&1 && [ ! -d .git ]; then git init -q && git add -A; fi
+  if command -v mise >/dev/null 2>&1; then
+    mise trust -q . >/dev/null 2>&1 || true
+    mise install || echo "bitkit: mise install did not finish; rerun it in $DIR" >&2
+  else
+    echo "bitkit: mise not found. Install it from https://mise.jdx.dev, then run: mise install"
+  fi
+  if command -v just >/dev/null 2>&1 && command -v bun >/dev/null 2>&1; then just setup || true; fi
+
+  cat <<NEXT
+
+bitkit: ready in $DIR
+  cd $DIR
+  just check      validate the kit and run tests
+  just dev        local site with cf
+  just domains    search domains (read-only)
+  open ACCOUNTS.md and create each account yourself
+NEXT
+}
+
+main "$@"
+`;
+  }
+  function publishFiles(k) {
+    return { "scripts/publish-kit.sh": `#!/bin/sh
+# ${head(k, "script")}
+# Publishes bitkit.kit.json to bitkit.sh and prints the one-line setup command.
+# Needs BITKIT_TOKEN (issued by the bitkit operator). Sends only the kit JSON.
+set -eu
+cd "$(dirname "$0")/.."
+: "\${BITKIT_TOKEN:?set BITKIT_TOKEN first}"
+curl -fsS -X POST "\${BITKIT_ORIGIN:-https://app.bitkit.sh}/api/kits" \\
+  -H "authorization: Bearer $BITKIT_TOKEN" -H "content-type: application/json" \\
+  --data-binary @bitkit.kit.json
+echo
+` };
+  }
+
+  /* ---------- README / CLAUDE.md ---------- */
+  function readme(k, files) {
+    const mods = MODULES.filter((m) => k.modules.includes(m.id));
+    return `# ${k.brand.name} identity kit\n\n${k.brand.tagline}\n\nEverything here is generated from \`bitkit.kit.json\` (schema bitkit.kit/v1, ${k.generatedAt}). Change the kit, then regenerate.\n\n## What’s inside\n\n| Module | Files |\n| --- | --- |\n${mods.map((m) => `| ${m.name} | ${m.why} |`).join("\n")}\n\n## Start\n\n${fence("sh", `${has(k, "devex", "mise") ? "mise install\n" : ""}${has(k, "devex", "just") ? "just setup\njust check\njust dev        # local brand site\njust preview    # temporary Cloudflare preview with a claim link" : "bun scripts/validate-kit.ts"}`)}\n\nThen work through \`ACCOUNTS.md\`. You create every platform account yourself; the kit prepares the fields.\n\n## Files\n\n${fence("text", Object.keys(files).sort().join("\n"))}\n`;
+  }
+  function claudeMd(k) {
+    return `# ${k.brand.name}: instructions for Claude and other agents\n\n- \`bitkit.kit.json\` is the single source of truth. Edit it, validate with \`bun scripts/validate-kit.ts\`, then regenerate. Never hand-edit files whose header says they are generated.\n- Brand voice and tokens: see the skills in \`.claude/skills/\`.\n- Cloudflare: use the \`cf\` CLI (\`npx cf@latest\`); this project has \`cloudflare.config.ts\` and no Wrangler config. The only Wrangler use is \`scripts/preview-temporary.sh\`, because cf has no temporary-account mode yet.\n- Commands: ${has(k, "devex", "just") ? "`just check`, `just dev`, `just build`, `just domains`, `just preview`, `just deploy`" : "`bun scripts/validate-kit.ts`, `npx cf@latest deploy`"}.\n- Tests: \`bun test\`${has(k, "devex", "vitest") ? "; Vitest with `just test-workers`" : ""}.\n- Never create, sign in to, or post from any platform account, never register a domain, and never accept terms of service on the owner's behalf. Prepare \`ACCOUNTS.md\` and the profile sheets; the owner does the sign-ups.\n- Claim URLs and tokens are credentials. Keep them out of commits, issues, and logs.\n- Scratch files go in \`.tmp/\`.\n`;
+  }
+
+  /* ---------- everything ---------- */
+  function generate(d, now = new Date(), opts = {}) {
+    const k = buildKit(d, now), f = {}, m = (id) => k.modules.includes(id);
+    f["bitkit.kit.json"] = JSON.stringify(k, null, 2) + "\n";
+    f["schema/bitkit.kit.v1.json"] = schemaJson();
+    f["scripts/validate-kit.ts"] = validator(k);
+    f["brand/index.html"] = brandBook(k); f["brand/BRAND.md"] = brandMd(k); f["brand/tokens.css"] = tokensCss(k); f["brand/tokens.json"] = tokensJson(k); f["brand/assets/mark.svg"] = k.mark.svg + "\n";
+    for (const p of k.platforms) f[`brand/platforms/${p.id}.md`] = platformMd(k, p);
+    if (m("accounts")) f["ACCOUNTS.md"] = accountsMd(k);
+    if (m("devex")) Object.assign(f, devexFiles(k));
+    if (m("deploy")) Object.assign(f, deployFiles(k));
+    if (m("platform")) { Object.assign(f, platformFiles(k));
+      f["platform/src/generator.js"] = opts.source ? `// bitkit generator, copied from the builder at ${k.generatedAt}. Regenerate rather than edit.\n${opts.source.replace(/if \(typeof module !== "undefined"\) module\.exports = BITKIT;\s*$/, "")}\nexport default BITKIT;\n` : "// Export from the bitkit builder to embed the generator here.\nexport default null;\n";
+      f["platform/src/generator.d.ts"] = "declare const BITKIT: {\n  normalize(d: unknown): any;\n  problems(d: any): string[];\n  generate(d: any, now?: Date, opts?: { source?: string }): { kit: any; files: Record<string, string> };\n  tar(files: Record<string, string>, root: string, mtime?: number): Uint8Array<ArrayBuffer>;\n  setupScript(o: { id: string; slug: string; name: string; sha: string; origin?: string }): string;\n};\nexport default BITKIT;\n"; }
+    if (m("deploy")) Object.assign(f, publishFiles(k));
+    if (m("ci")) Object.assign(f, workflows(k));
+    if (m("mcp")) Object.assign(f, mcpFiles(k));
+    if (m("skills")) Object.assign(f, skillFiles(k));
+    if (m("agents")) Object.assign(f, companyFiles(k));
+    if (m("a2ui")) Object.assign(f, a2uiFiles(k));
+    if (m("design-system")) Object.assign(f, designSystemFiles(k));
+    f["CLAUDE.md"] = claudeMd(k); f["AGENTS.md"] = claudeMd(k);
+    f["README.md"] = readme(k, { ...f, "README.md": "" });
+    return { kit: k, files: f };
+  }
+
+  return { V, REVIEWED, PLATFORMS, GROUPS, FONTS, PRESETS, CATEGORIES, SERVICES, HOSTING, MCP, WORKFLOWS, SKILLS, DEVEX, MODULES, ROLES,
+    tar, setupScript, designSystemFiles, esc, slugify, font, validHex, contrast, mix, onColor, trimBio, checkHandle, blank, normalize, selected, handleFor, bioFor, darkPalette, candidates, problems, markSvg, buildKit, generate };
+})();
+if (typeof module !== "undefined") module.exports = BITKIT;
+</script>
+<script>
+"use strict";
+const GEN_SOURCE = document.getElementById("bitkit-gen")?.textContent ?? "";
+const G = BITKIT, { esc, font, validHex, contrast, mix, onColor, trimBio, checkHandle } = G;
+const STORE = "bitkit.kit.v1";
+let d;
+try { d = G.normalize(JSON.parse(localStorage.getItem(STORE)) || G.blank()); } catch { d = G.normalize(G.blank()); }
+let step = 0, previewTab = "book", toast = "", openFile = "README.md", lastSynced = "", syncState = "This browser only";
+const $ = (s, r = document) => r.querySelector(s);
+const STEPS = [
+  { id: "brand", t: "Brand", s: "Name and tagline" }, { id: "handle", t: "Handle", s: "Choose your @" }, { id: "platforms", t: "Platforms", s: "Where you’ll show up" },
+  { id: "look", t: "Look", s: "Color, type, mark" }, { id: "voice", t: "Voice", s: "Tone and bio" }, { id: "stack", t: "Stack", s: "Repo, deploy, tooling" }, { id: "services", t: "Services", s: "Bindings, hosting, domain" },
+  { id: "automation", t: "Automation", s: "Actions, MCP, skills" }, { id: "agents", t: "Agents", s: "Paperclip company" }, { id: "design", t: "Design system", s: "Tokens, brand book, components" }, { id: "export", t: "Deploy & export", s: "Publish, set up, export" }
+];
+const sel = () => G.selected(d);
+const hFor = (pid) => G.handleFor(d, pid), bFor = (pid) => G.bioFor(d, pid);
+const toggleCards = (list, items) => `<div class="plat-grid">${items.map((x) => `<label class="plat"><input type="checkbox" data-toggle="${list}:${x.id}" ${d[list].includes(x.id) ? "checked" : ""} ${x.locked ? "disabled" : ""}><b>${esc(x.name)}</b><small>${esc(x.why)}</small></label>`).join("")}</div>`;
+const chipPick = (path, options, current) => `<div class="chips">${options.map(([v, l]) => `<button class="chip" type="button" data-set="${path}=${esc(v)}" aria-pressed="${String(v) === String(current)}">${esc(l)}</button>`).join("")}</div>`;
+
+/* ---------- step views ---------- */
+const views = {
+  brand: () => `<h1>Name the brand</h1><p class="lede">Start with what people will call you. Everything in the bundle is built from these lines.</p>
+    <div class="field"><label for="f-name">Brand name</label><input id="f-name" type="text" data-bind="brand.name" value="${esc(d.brand.name)}" autocomplete="off"></div>
+    <div class="field"><label for="f-tag">Tagline</label><input id="f-tag" type="text" data-bind="brand.tagline" value="${esc(d.brand.tagline)}" maxlength="90"><span class="help">One line, under 90 characters.</span></div>
+    <div class="row"><div class="field"><label for="f-cat">Category</label><select id="f-cat" data-bind="brand.category">${G.CATEGORIES.map((c) => `<option ${c === d.brand.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></div>
+      <div class="field"><span class="lbl">Slug</span><div data-region="slug"></div><span class="help">Used for file names, the repo, and the Worker.</span></div></div>
+    <div class="field"><label for="f-kw">Keywords</label><div class="list-edit"><input id="f-kw" type="text" placeholder="Add a word and press Enter" data-add="keywords"></div>
+      <div class="chips" data-region="keywords" style="margin-top:8px"></div><span class="help">Up to five. They seed handle ideas.</span></div>`,
+  handle: () => `<h1>Choose your handle</h1><p class="lede">Pick one primary @ to use everywhere. Where a platform’s rules don’t fit it, override that platform only.</p>
+    <span class="lbl">Ideas from your name</span><div class="chips" data-region="candidates" style="margin:8px 0 16px"></div>
+    <div class="field"><label for="f-handle">Primary handle</label><input id="f-handle" type="text" data-bind="handle.primary" value="${esc(d.handle.primary)}" autocomplete="off" spellcheck="false"></div>
+    <h2>Fit check per platform</h2><div class="table-wrap"><table><thead><tr><th>Platform</th><th>Handle</th><th>Status</th><th>Override</th></tr></thead><tbody data-region="handle-table"></tbody></table></div>`,
+  platforms: () => `<h1>Pick your platforms</h1><p class="lede">Each one gets a profile sheet and a line in your account checklist. You create the accounts; the kit fills in the fields.</p>
+    <div class="actions" style="margin:0 0 18px"><button class="btn ghost" type="button" data-act="plat-all">Select all</button><button class="btn ghost" type="button" data-act="plat-none">Clear</button></div>
+    <div class="groups">${G.GROUPS.map((g) => `<section><h2>${g}</h2><div class="plat-grid">${G.PLATFORMS.filter((p) => p.group === g).map((p) => `<label class="plat"><input type="checkbox" data-toggle="platforms:${p.id}" ${d.platforms.includes(p.id) ? "checked" : ""}><b>${esc(p.name)}</b><small>Handle ${p.min}–${p.max} · bio ${p.bio}<br>Avatar ${p.avatar}${p.banner ? ` · banner ${p.banner}` : ""}</small></label>`).join("")}</div></section>`).join("")}</div>
+    <p class="help" style="margin-top:16px">Limits come from bitkit’s platform catalog, last reviewed 8 Nov 2026. Check each platform’s current rules before launch.</p>`,
+  look: () => `<h1>Set the look</h1><p class="lede">Five colors, two typefaces, one mark. The preview updates as you go.</p>
+    <span class="lbl">Start from a preset</span><div class="chips" style="margin:8px 0 18px">${G.PRESETS.map((p, i) => `<button class="chip" type="button" data-preset="${i}"><span class="dot" style="background:${p.primary}"></span>${esc(p.name)}</button>`).join("")}</div>
+    <div class="swatches">${["primary", "secondary", "accent", "ink", "paper"].map((k) => `<div class="swatch"><div class="well" data-well="${k}" style="background:${d.palette[k]}"><input type="color" aria-label="${k} color" data-color="${k}" value="${validHex(d.palette[k]) ? d.palette[k] : "#000000"}"></div>
+      <div class="meta"><span>${k[0].toUpperCase() + k.slice(1)}</span><input type="text" aria-label="${k} hex" data-hex="${k}" value="${esc(d.palette[k])}" spellcheck="false"></div></div>`).join("")}</div>
+    <div class="contrast" data-region="contrast"></div>
+    <h2>Type</h2><div class="row">${[["heading", "Headings"], ["body", "Body"]].map(([k, l]) => `<div class="field"><label for="f-${k}">${l}</label><select id="f-${k}" data-bind="type.${k}">${G.FONTS.map((f) => `<option ${f.name === d.type[k] ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</select></div>`).join("")}</div>
+    <h2>Mark and shape</h2><div class="row">
+      <div class="field"><label for="f-gly">Monogram letters</label><input id="f-gly" type="text" maxlength="3" data-bind="mark.glyphs" value="${esc(d.mark.glyphs)}"></div>
+      <div class="field"><span class="lbl">Mark shape</span>${chipPick("mark.kind", [["seal", "Seal"], ["circle", "Circle"], ["square", "Square"]], d.mark.kind)}</div>
+      <div class="field"><label for="f-rad">Corner radius <span data-region="radius"></span></label><input id="f-rad" type="range" min="0" max="28" step="1" data-bind="shape.radius" data-num value="${d.shape.radius}"></div></div>`,
+  voice: () => `<h1>Find the voice</h1><p class="lede">Set where the brand sits on three scales, then write the bio every profile starts from.</p>
+    ${[["formality", "Formal", "Casual"], ["playfulness", "Serious", "Playful"], ["boldness", "Reserved", "Bold"]].map(([k, a, b]) => `<div class="slider-row"><span>${a}</span><input type="range" min="0" max="1" step="0.05" aria-label="${a} to ${b}" data-bind="voice.${k}" data-num value="${d.voice[k]}"><span>${b}</span></div>`).join("")}
+    <div class="row" style="margin-top:18px">${[["do", "We say"], ["dont", "We avoid"]].map(([k, l]) => `<div class="field"><span class="lbl">${l}</span><div class="list-edit"><input type="text" aria-label="Add to ${l}" data-add="${k}" placeholder="Add and press Enter"></div><div class="chips" data-region="list-${k}" style="margin-top:8px"></div></div>`).join("")}</div>
+    <div class="field"><label for="f-bio">Bio</label><textarea id="f-bio" data-bind="voice.bio">${esc(d.voice.bio)}</textarea><div class="counter" data-region="bio-counter"></div><span class="help">Over-limit bios are trimmed at a word break in each profile sheet.</span></div>
+    <details><summary>Write a different bio for one platform</summary>${sel().map((p) => `<div class="field" style="margin-top:12px"><label for="bio-${p.id}">${esc(p.name)} bio (limit ${p.bio})</label><textarea id="bio-${p.id}" data-bio="${p.id}" placeholder="Uses the main bio">${esc(d.voice.bios[p.id] || "")}</textarea></div>`).join("") || `<p class="help">Pick platforms first.</p>`}</details>`,
+  stack: () => `<h1>Pick the stack</h1><p class="lede">Where the code lives, where the brand site deploys, and the tooling around it. You create the repository and the Cloudflare account yourself.</p>
+    <h2>Repository</h2><div class="row"><div class="field"><label for="f-owner">GitHub owner</label><input id="f-owner" type="text" data-bind="repo.owner" value="${esc(d.repo.owner)}" spellcheck="false"></div>
+      <div class="field"><label for="f-repo">Repository name</label><input id="f-repo" type="text" data-bind="repo.name" value="${esc(d.repo.name)}" spellcheck="false"></div></div>
+    <h2>Cloudflare deploy</h2><div class="row"><div class="field"><label for="f-worker">Worker name</label><input id="f-worker" type="text" data-bind="deploy.worker" value="${esc(d.deploy.worker)}" spellcheck="false"><span class="help">The Worker in cloudflare.config.ts: API routes plus the brand site.</span></div>
+      <div class="field"><label for="f-domain">Custom domain (optional)</label><input id="f-domain" type="text" data-bind="deploy.domain" value="${esc(d.deploy.domain)}" placeholder="brand.example.com" spellcheck="false"></div></div>
+    <p class="help">Previews use Cloudflare temporary accounts: <code>just preview</code> deploys without a login and prints a claim link you open within 60 minutes.</p>
+    <h2>Dev experience</h2>${toggleCards("devex", G.DEVEX)}`,
+  services: () => `<h1>Select services</h1><p class="lede">Pick the Cloudflare services the site’s Worker binds to. bitkit writes them into <code>cloudflare.config.ts</code> for the <code>cf</code> CLI and, on the platform, provisions them per tenant.</p>
+    <h2>Bindings</h2>${toggleCards("services", G.SERVICES.map((x) => ({ ...x, why: `env.${x.binding}: ${x.why}` })))}
+    <h2>Hosting</h2>${chipPick("hosting.model", G.HOSTING.map((h) => [h.id, h.name]), d.hosting.model)}<p class="help" data-region="hosting-why"></p>
+    <div class="row" style="margin-top:12px"><div class="field"><label for="f-ns">Dispatch namespace</label><input id="f-ns" type="text" data-bind="hosting.namespace" value="${esc(d.hosting.namespace)}" spellcheck="false"><span class="help">Workers for Platforms namespace holding tenant Workers.</span></div>
+      <div class="field"><label for="f-zone">Platform zone</label><input id="f-zone" type="text" data-bind="hosting.platformZone" value="${esc(d.hosting.platformZone)}" spellcheck="false"><span class="help">Tenants get &lt;slug&gt;.this-zone until a custom domain is attached.</span></div></div>
+    <h2>Domain</h2>
+    <div class="field"><label for="f-dq">Search for</label><input id="f-dq" type="text" data-bind="domain.query" value="${esc(d.domain.query)}" spellcheck="false"></div>
+    <span class="lbl">Ideas to check</span><div class="chips" data-region="domain-ideas" style="margin:8px 0 14px"></div>
+    <div data-region="domain-results"></div>
+    <p class="help">Search runs in your Cloudflare account with the cf CLI, or ask Claude in the chat to search; results land in this table. You register the domain yourself.</p>
+    <pre class="cmd" data-region="domain-cmd"></pre>`,
+  automation: () => `<h1>Wire up automation</h1><p class="lede">Workflows for GitHub Actions, MCP servers for Claude and other clients, and skills generated from your kit.</p>
+    <h2>GitHub Actions</h2>${toggleCards("ci", G.WORKFLOWS)}<p class="help">Actions are pinned to their latest majors: ${Object.values(G.V.actions).map(esc).join(", ")}. Deploy workflows read secrets you add to the repository.</p>
+    <h2>MCP servers</h2>${toggleCards("mcp", G.MCP)}<p class="help">Written to <code>.mcp.json</code>. Each server asks you to sign in the first time you use it.</p>
+    <h2>Agent skills</h2>${toggleCards("skills", G.SKILLS)}`,
+  agents: () => `<h1>Staff the company</h1><p class="lede">A Paperclip company in the open Agent Companies format. Agents prepare and build; they never create accounts or deploy to production without your approval.</p>
+    <div class="row"><div class="field"><span class="lbl">Company type</span>${chipPick("agents.purpose", [["brand", "Runs this brand"], ["studio", "A studio that makes kits"]], d.agents.purpose)}</div>
+      <div class="field"><span class="lbl">Size</span>${chipPick("agents.size", [["lean", "Lean, 4 agents"], ["full", "Full, 10 agents"]], d.agents.size)}</div></div>
+    <div class="row"><div class="field"><label for="f-budget">Monthly budget per agent (cents)</label><input id="f-budget" type="text" inputmode="numeric" data-bind="agents.budgetCents" data-num value="${d.agents.budgetCents}"></div>
+      <div class="field"><label for="f-tz">Routine time zone</label><input id="f-tz" type="text" data-bind="agents.timezone" value="${esc(d.agents.timezone)}"></div></div>
+    <h2>Org chart</h2><div data-region="org"></div>
+    <p class="help">Imports with <code>paperclipai company import ./company</code>. New agents need board approval, heartbeats start off, and routines start paused.</p>`,
+  design: () => `<h1>Create your design system</h1><p class="lede">bitkit turns the kit into a Claude Design System: tokens for light and dark, a brand book, components with live previews, and the mark. You refine it in Claude; the kit site mirrors it.</p>
+    <label class="plat" style="max-width:460px"><input type="checkbox" data-toggle="modules:design-system" ${d.modules.includes("design-system") ? "checked" : ""}><b>Include the design system in the bundle</b><small>Writes design-system/project/ in the Design System format.</small></label>
+    <h2>Tokens</h2><div data-region="ds-tokens"></div>
+    <h2>Files</h2><ul class="files" data-region="ds-files"></ul>
+    <div class="actions"><button class="btn wax" type="button" data-act="ds-claude">Create in Claude</button><button class="btn ghost" type="button" data-act="ds-zip">Download design system</button></div>
+    <p class="help" data-region="ds-hint"></p>`,
+  export: () => `<h1>Deploy &amp; export</h1><p class="lede">Publish the kit for a one-line setup, download the bundle, or both. You create every platform account yourself.</p>
+    <div class="actions" style="margin-top:0"><button class="btn wax" type="button" data-act="publish" ${HOSTED ? "" : "hidden"}>Publish kit</button></div>
+    ${toggleCards("modules", G.MODULES)}
+    <div data-region="export-problems" style="margin-top:16px"></div>
+    <div class="actions"><button class="btn ${HOSTED ? "ghost" : "wax"}" type="button" data-act="dl-zip">Download bundle (.zip)</button><button class="btn ghost" type="button" data-act="dl-json">bitkit.kit.json</button><button class="btn ghost" type="button" data-act="dl-md">BRAND.md</button><button class="btn ghost" type="button" data-act="dl-accounts">ACCOUNTS.md</button></div>
+    <div class="toast" data-region="toast" role="status"></div>
+    <h2>One-line setup</h2><div data-region="setup"></div>
+    <h2>Bring back a kit</h2><div class="actions" style="margin-top:0"><label class="btn ghost" for="f-import">Import bitkit.kit.json</label><input id="f-import" type="file" accept="application/json,.json" hidden><button class="btn ghost" type="button" data-act="reset">Start over</button></div>`
+};
+
+/* ---------- regions ---------- */
+const regions = {
+  slug: () => `<code>${esc(d.brand.slug || "none")}</code>`,
+  keywords: () => d.brand.keywords.map((w, i) => `<button class="chip" type="button" data-del="keywords:${i}" aria-label="Remove ${esc(w)}">${esc(w)}<span class="x" aria-hidden="true">×</span></button>`).join("") || `<span class="help">No keywords yet.</span>`,
+  candidates: () => G.candidates(d).map((h) => `<button class="chip" type="button" data-pick="${esc(h)}" aria-pressed="${h === d.handle.primary}">@${esc(h)}</button>`).join(""),
+  "handle-table": () => (sel().length ? sel() : G.PLATFORMS).map((p) => { const h = hFor(p.id), c = checkHandle(p, h);
+    return `<tr><td>${esc(p.name)}</td><td><code>@${esc(h)}</code></td><td class="status ${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✕"} ${esc(c.msg)}</td><td><input type="text" aria-label="${esc(p.name)} override" data-override="${p.id}" value="${esc(d.handle.overrides[p.id] || "")}" placeholder="Use primary"></td></tr>`; }).join(""),
+  contrast: () => [["Ink on paper", "ink", "paper"], ["Paper on primary", "paper", "primary"], ["Ink on secondary", "ink", "secondary"], ["Ink on accent", "ink", "accent"]].map(([l, a, b]) => {
+    if (!validHex(d.palette[a]) || !validHex(d.palette[b])) return `<span class="bad">${l}: invalid color</span>`;
+    const r = contrast(d.palette[a], d.palette[b]); return `<span class="${r >= 4.5 ? "ok" : r >= 3 ? "warn" : "bad"}">${l} ${r.toFixed(2)}:1, ${r >= 4.5 ? "passes AA" : r >= 3 ? "large text only" : "fails AA"}</span>`; }).join(""),
+  radius: () => `${d.shape.radius}px`,
+  "list-do": () => d.voice.do.map((w, i) => `<button class="chip" type="button" data-del="do:${i}">${esc(w)}<span class="x" aria-hidden="true">×</span></button>`).join(""),
+  "list-dont": () => d.voice.dont.map((w, i) => `<button class="chip" type="button" data-del="dont:${i}">${esc(w)}<span class="x" aria-hidden="true">×</span></button>`).join(""),
+  "bio-counter": () => sel().map((p) => { const n = bFor(p.id).length; return `<span class="${n > p.bio ? "bad" : "ok"}">${esc(p.name)} ${n}/${p.bio}</span>`; }).join("") || `<span>No platforms selected</span>`,
+  org: () => { const roles = G.ROLES.filter((r) => r.sizes.includes(d.agents.size)), keep = new Set(roles.map((r) => r.slug));
+    const boss = (r) => { let b = r.reportsTo; while (b && !keep.has(b)) b = G.ROLES.find((x) => x.slug === b)?.reportsTo ?? null; return b; };
+    const tree = (parent, depth) => roles.filter((r) => boss(r) === parent).map((r) => `<li style="--depth:${depth}"><b>${esc(r.name)}</b> <span class="help">${esc(r.title)}</span>${roles.some((x) => boss(x) === r.slug) ? `<ul>${tree(r.slug, depth + 1)}</ul>` : ""}</li>`).join("");
+    return `<ul class="org">${tree(null, 0)}</ul>`; },
+  "export-problems": () => { const ps = G.problems(d); return ps.length ? `<p class="bad" style="margin:0 0 6px;font-weight:600">Fix these before exporting:</p><ul class="problems">${ps.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="ok" style="margin:0">Ready: ${Object.keys(gen().files).length} files.</p>`; },
+  "hosting-why": () => esc(G.HOSTING.find((h) => h.id === d.hosting.model)?.why || ""),
+  "domain-ideas": () => { const base = G.slugify(d.domain.query || d.brand.name).replace(/-/g, ""); return [base + ".com", base + ".co", base + ".coffee", base + ".cafe", "get" + base + ".com", base + ".shop"].map((n) => `<button class="chip" type="button" data-domain="${esc(n)}" aria-pressed="${n === d.deploy.domain}">${esc(n)}</button>`).join(""); },
+  "domain-results": () => { const r = d.domain.results; if (!r.length) return `<div class="empty">No checked results yet.</div>`;
+    return `<div class="table-wrap"><table><thead><tr><th>Domain</th><th>Status</th><th>First year</th><th>Renewal</th><th></th></tr></thead><tbody>${r.map((x) => `<tr><td><code>${esc(x.name)}</code></td><td class="status ${x.registrable ? "ok" : "bad"}">${x.registrable ? "Available" : esc((x.reason || "unavailable").replace(/_/g, " "))}</td><td>${x.registration_cost ? "$" + esc(x.registration_cost) : ""}</td><td>${x.renewal_cost ? "$" + esc(x.renewal_cost) : ""}</td><td>${x.registrable ? `<button class="chip" type="button" data-domain="${esc(x.name)}" aria-pressed="${x.name === d.deploy.domain}">${x.name === d.deploy.domain ? "Chosen" : "Use"}</button>` : ""}</td></tr>`).join("")}</tbody></table></div><p class="help">Checked ${esc(d.domain.checkedAt || "")}${d.domain.account ? " in " + esc(d.domain.account) : ""}. Prices in USD from Cloudflare Registrar; recheck before buying.</p>`; },
+  "domain-cmd": () => esc(`npx cf@latest registrar registrations search --query "${d.domain.query || d.brand.name}" --limit 12\nnpx cf@latest registrar registrations check --domains ${(d.domain.results.filter((x) => x.registrable).slice(0, 4).map((x) => x.name).join(" ")) || "name.com name.co"}`),
+  "ds-tokens": () => { const f = gen().files["design-system/project/tokens.json"]; if (!f) return `<p class="help">Turn on the design system above.</p>`; const t = JSON.parse(f);
+    return `<div class="table-wrap"><table><thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Use</th></tr></thead><tbody>${t.color.tokens.map((x) => `<tr><td><code>${esc(x.name)}</code></td><td><span class="dot" style="background:${esc(x.value.light)}"></span><code>${esc(x.value.light)}</code></td><td><span class="dot" style="background:${esc(x.value.dark)}"></span><code>${esc(x.value.dark)}</code></td><td class="help" style="white-space:normal">${esc(x.usage)}</td></tr>`).join("")}</tbody></table></div><p class="help">Type: ${esc(t.type.families.heading.split(",")[0])} for headings, ${esc(t.type.families.body.split(",")[0])} for text, ${t.type.groups.reduce((a, g) => a + g.styles.length, 0)} styles. Radii ${t.radius.tokens.map((x) => esc(x.value)).join(", ")}.</p>`; },
+  "ds-files": () => Object.keys(gen().files).filter((p) => p.startsWith("design-system/")).sort().map((p) => `<li><code>${esc(p.replace("design-system/", ""))}</code></li>`).join("") || `<li class="muted">None yet</li>`,
+  "ds-hint": () => HOSTED ? (d.publish.id ? "Opens Claude with a prompt to build the system from your published kit." : "Publishes the kit first, then opens Claude with a prompt to build the system from it.") : window.claude?.use ? "In this chat, ask Claude: “Create my design system from the kit.” Claude reads this kit and builds it." : "Opens Claude with a prompt; attach the downloaded design system files there.",
+  setup: () => d.publish.id
+    ? `<pre class="cmd">${esc(d.publish.setup || `curl -fsSL https://app.bitkit.sh/setup/${d.publish.id} | sh`)}</pre><p class="help">Published ${esc(d.publish.publishedAt)}. Anyone with this command can download the kit, so share it only with the owner. To read the script first: <code>${esc((d.publish.setup || `curl -fsSL https://app.bitkit.sh/setup/${d.publish.id} | sh`).replace(/ \| sh$/, " -o bitkit-setup.sh"))}</code></p>`
+    : `<p class="help" style="margin:0">Not published yet. Publishing sends only bitkit.kit.json to bitkit.sh and returns a command that downloads, verifies, and unpacks this bundle on any machine. Ask Claude in the chat to publish it, or run <code>just publish</code> from the downloaded bundle.</p>`,
+  toast: () => esc(toast),
+  sync: () => esc(syncState)
+};
+let genCache = null;
+const gen = () => (genCache ??= G.generate(d, new Date(), { source: GEN_SOURCE }));
+function refresh({ fromRemote = false } = {}) {
+  genCache = null;
+  d.brand.slug = G.slugify(d.brand.name);
+  document.querySelectorAll("[data-region]").forEach((el) => { const f = regions[el.dataset.region]; if (f) el.innerHTML = f(); });
+  renderSteps(); renderPreview(); loadBrandFonts();
+  try { localStorage.setItem(STORE, JSON.stringify(d)); } catch {}
+  if (!fromRemote) queueSync();
+}
+function renderSteps() {
+  $("#steps").innerHTML = STEPS.map((s, i) => `<button class="step ${i < step ? "done" : ""}" type="button" data-step="${i}" ${i === step ? 'aria-current="step"' : ""}><span class="n">${i < step ? "✓" : i + 1}</span><span><b>${s.t}</b><small>${s.s}</small></span></button>`).join("");
+  const nav = $("#steps"), cur = nav.querySelector("[aria-current]");
+  if (cur && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = cur.offsetLeft - (nav.clientWidth - cur.offsetWidth) / 2;
+}
+function renderPanel() {
+  $("#panel").innerHTML = views[STEPS[step].id]() + `<div class="nav"><button class="btn ghost" type="button" data-act="prev" ${step === 0 ? "disabled" : ""}>Back</button>${step < STEPS.length - 1 ? `<button class="btn" type="button" data-act="next">Next: ${STEPS[step + 1].t}</button>` : ""}</div>`;
+  refresh();
+}
+let fontHref = "";
+function loadBrandFonts() {
+  const href = `https://fonts.googleapis.com/css2?${[...new Set([d.type.heading, d.type.body])].map((f) => "family=" + f.replace(/ /g, "+") + ":wght@400;600;700").join("&")}&display=swap`;
+  if (href !== fontHref) { fontHref = href; $("#brand-fonts").href = href; }
+}
+function renderPreview() {
+  for (const [id, tab] of [["tab-book", "book"], ["tab-prof", "prof"], ["tab-files", "files"]]) $("#" + id).setAttribute("aria-selected", String(previewTab === tab));
+  const p = d.palette;
+  if (previewTab !== "files" && !["primary", "paper", "ink", "secondary", "accent"].every((k) => validHex(p[k]))) { $("#preview").innerHTML = `<div class="empty">Fix the palette hex values to see the preview.</div>`; return; }
+  if (previewTab === "book") {
+    $("#preview").innerHTML = `<div class="specimen" style="background:${p.paper};color:${p.ink};font-family:${esc(font(d.type.body))}">
+      <div class="spec-hero"><div class="mark">${G.markSvg(d, 112)}</div><h2 class="spec-name" style="font-family:${esc(font(d.type.heading))}">${esc(d.brand.name || "Your brand")}</h2><p class="spec-tag">${esc(d.brand.tagline)}</p></div>
+      <div class="spec-body" style="border-top:1px solid ${mix(p.ink, p.paper, 0.85)}"><div class="spec-chips">${["primary", "secondary", "accent", "ink", "paper"].map((k) => `<div style="background:${p[k]};color:${onColor(p[k])}">${k}</div>`).join("")}</div>
+      <div class="spec-type"><p style="font-family:${esc(font(d.type.heading))};font-size:1.4rem;font-weight:700;line-height:1.15">${esc(d.type.heading)}</p><p style="font-size:.92rem;opacity:.85">${esc(d.type.body)} for body copy. ${esc(trimBio(d.voice.bio, 110))}</p></div>
+      <span class="spec-btn" style="background:${p.primary};color:${onColor(p.primary)};border-radius:${d.shape.radius}px">Visit @${esc(d.handle.primary)}</span></div></div>`;
+  } else if (previewTab === "prof") {
+    $("#preview").innerHTML = sel().length ? `<div class="profiles">${sel().map((pl) => { const h = hFor(pl.id), c = checkHandle(pl, h);
+      return `<article class="profile"><div class="mark">${G.markSvg(d, 48)}</div><div><b>${esc(d.brand.name)}</b><span class="handle">${esc(pl.name)} · @${esc(h)} ${c.ok ? "" : `<span class="bad">(${esc(c.msg)})</span>`}</span><p>${esc(trimBio(bFor(pl.id), pl.bio))}</p><div class="src">${esc(pl.url.replace("{h}", h))}</div></div></article>`; }).join("")}</div>` : `<div class="empty">Pick platforms to see profile previews.</div>`;
+  } else {
+    const files = gen().files, paths = Object.keys(files).sort();
+    if (!files[openFile]) openFile = "README.md";
+    $("#preview").innerHTML = `<div class="files-pane"><div class="tree" role="listbox" aria-label="Bundle files">${paths.map((f) => `<button type="button" role="option" data-file="${esc(f)}" aria-selected="${f === openFile}" style="--depth:${f.split("/").length - 1}">${esc(f.split("/").pop())}<span class="dir">${esc(f.split("/").slice(0, -1).join("/"))}</span></button>`).join("")}</div>
+      <div class="viewer"><div class="viewer-head"><code>${esc(openFile)}</code><span class="help">${files[openFile].length.toLocaleString()} chars</span></div><pre>${esc(files[openFile])}</pre></div></div>`;
+  }
+}
+
+/* ---------- downloads ---------- */
+async function offer(filename, data) {
+  try {
+    const dl = window.claude?.use ? await window.claude.use("downloads") : null;
+    if (dl) { await dl.save({ filename, data }); toast = `Saved ${filename}.`; return; }
+  } catch (e) {
+    if (e?.code === "declined") { toast = "Download cancelled."; return; }
+    if (e?.code === "rate_limited") { toast = "A download prompt is already open. Finish that one first."; return; }
+  }
+  const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
+  const a = Object.assign(document.createElement("a"), { href: url, download: filename }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast = `Downloaded ${filename}.`;
+}
+async function exportAs(kind) {
+  if (G.problems(d).length) { toast = "Fix the listed problems first."; refresh(); return; }
+  const { kit, files } = G.generate(d, new Date(), { source: GEN_SOURCE }), slug = kit.brand.slug;
+  if (kind === "json") await offer("bitkit.kit.json", files["bitkit.kit.json"]);
+  else if (kind === "md") await offer("BRAND.md", files["brand/BRAND.md"]);
+  else if (kind === "ds") {
+    if (!window.JSZip) { toast = "The zip library didn’t load."; refresh(); return; }
+    const z = new JSZip(); for (const [p, c] of Object.entries(files)) if (p.startsWith("design-system/")) z.file(`${slug}-design-system/${p.slice(14)}`, c);
+    await offer(`${slug}-design-system.zip`, await z.generateAsync({ type: "blob" }));
+  }
+  else if (kind === "accounts") { if (files["ACCOUNTS.md"]) await offer("ACCOUNTS.md", files["ACCOUNTS.md"]); else toast = "Turn on the Account checklist module first."; }
+  else {
+    if (!window.JSZip) { toast = "The zip library didn’t load. Download bitkit.kit.json and regenerate later."; refresh(); return; }
+    const z = new JSZip(), root = z.folder(`${slug}-identity-kit`);
+    for (const [p, c] of Object.entries(files)) root.file(p, c, p.endsWith(".sh") ? { unixPermissions: "755" } : {});
+    await offer(`${slug}-identity-kit.zip`, await z.generateAsync({ type: "blob", platform: "UNIX" }));
+  }
+  refresh();
+}
+
+/* ---------- hosted on app.bitkit.sh: publish and hand off to Claude ---------- */
+const HOSTED = location.hostname === "app.bitkit.sh";
+async function publishKit() {
+  if (G.problems(d).length) { toast = "Fix the listed problems first."; refresh(); return false; }
+  toast = "Publishing…"; refresh();
+  try {
+    const res = await fetch("/api/kits", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(d) });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.problems ? j.problems.join(" ") : j.error || res.status);
+    d.publish = { id: j.id, setup: j.setup, publishedAt: new Date().toISOString().slice(0, 10) };
+    toast = `Published. Your edit key for Claude is ${j.key}. Save it now; bitkit shows it only once.`; refresh(); return true;
+  } catch (e) { toast = `Publishing didn’t work: ${e.message}.`; refresh(); return false; }
+}
+async function createInClaude() {
+  if (window.claude?.use && !HOSTED) { toast = "Ask Claude in this chat: “Create my design system from the kit.”"; refresh(); return; }
+  if (HOSTED && !d.publish.id && !(await publishKit())) return;
+  if (!d.modules.includes("design-system")) { d.modules.push("design-system"); refresh(); }
+  const src = d.publish.id ? `https://app.bitkit.sh/kits/${d.publish.id}.tar.gz` : "the design-system folder I'm attaching";
+  const q = `Create a Claude Design System titled "${d.brand.name}" from my bitkit kit: ${src}. Use the files in design-system/project/ exactly (tokens.json, README.md, components), upload assets/Logos/mark.svg as a Logos asset, and write the index last.`;
+  window.open(`https://claude.ai/new?q=${encodeURIComponent(q)}`, "_blank", "noopener");
+}
+
+/* ---------- Claude: shared kit doc + in-page requests ---------- */
+let kitRef = null, writeTimer = null, writing = false, pending = false, sample = null;
+function queueSync() { if (!kitRef) return; clearTimeout(writeTimer); writeTimer = setTimeout(flush, 900); }
+async function flush() {
+  if (!kitRef) return; if (writing) { pending = true; return; }
+  const body = JSON.stringify(d); if (body === lastSynced) return;
+  writing = true;
+  try { await kitRef.set({ kit: JSON.parse(body), by: "page", at: Date.now() }); lastSynced = body; syncState = "Synced with Claude"; }
+  catch (e) { syncState = e?.code === "not_granted" ? "Claude sync is off for this view" : "Sync paused; changes stay in this browser"; }
+  finally { writing = false; const el = $('[data-region="sync"]'); if (el) el.textContent = syncState; if (pending) { pending = false; flush(); } }
+}
+async function connectClaude() {
+  if (!window.claude?.use) return;
+  const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+  if (db && user) {
+    const id = await user.id();
+    if (id) {
+      kitRef = db.collection(`data/users/${id}`).doc("kit");
+      syncState = "Connecting to Claude…"; $('[data-region="sync"]').textContent = syncState;
+      const timer = setTimeout(() => { syncState = "Claude sync didn’t answer; changes stay in this browser"; $('[data-region="sync"]').textContent = syncState; }, 10000);
+      kitRef.onSnapshot((snap) => {
+        clearTimeout(timer);
+        if (!snap.exists) { syncState = "Synced with Claude"; flush(); return; }
+        const data = snap.data(), body = JSON.stringify(data?.kit ?? null);
+        if (data?.kit && body !== lastSynced && body !== JSON.stringify(d)) {
+          d = G.normalize(data.kit); lastSynced = JSON.stringify(d);
+          if (data.by === "claude") toast = data.note ? `Claude: ${data.note}` : "Claude updated the kit.";
+          renderPanel_fromRemote();
+        } else lastSynced = body;
+        syncState = "Synced with Claude"; const el = $('[data-region="sync"]'); if (el) el.textContent = syncState;
+      }, () => { syncState = "Sync paused; changes stay in this browser"; const el = $('[data-region="sync"]'); if (el) el.textContent = syncState; });
+    }
+  }
+  sample = await window.claude.use("sample");
+  if (sample) $("#ask-box").hidden = false;
+}
+function renderPanel_fromRemote() {
+  $("#panel").innerHTML = views[STEPS[step].id]() + `<div class="nav"><button class="btn ghost" type="button" data-act="prev" ${step === 0 ? "disabled" : ""}>Back</button>${step < STEPS.length - 1 ? `<button class="btn" type="button" data-act="next">Next: ${STEPS[step + 1].t}</button>` : ""}</div>`;
+  refresh({ fromRemote: true });
+  $("#ask-status").textContent = toast;
+}
+const ALLOWED = () => ({ platforms: G.PLATFORMS.map((p) => p.id), fonts: G.FONTS.map((f) => f.name), markKinds: ["seal", "circle", "square"], devex: G.DEVEX.map((x) => x.id), ci: G.WORKFLOWS.map((x) => x.id), mcp: G.MCP.map((x) => x.id), skills: G.SKILLS.map((x) => x.id), modules: G.MODULES.map((x) => x.id), services: G.SERVICES.map((x) => x.id), hostingModels: G.HOSTING.map((x) => x.id), agentSizes: ["lean", "full"], agentPurposes: ["brand", "studio"] });
+function merge(base, patch) {
+  if (Array.isArray(patch) || typeof patch !== "object" || patch === null) return patch;
+  const out = { ...(base || {}) }; for (const [k, v] of Object.entries(patch)) out[k] = merge(base?.[k], v); return out;
+}
+async function askClaude() {
+  const q = $("#ask").value.trim(); if (!q || !sample) return;
+  const btn = $("#ask-btn"); btn.disabled = true; $("#ask-status").textContent = "Asking Claude…";
+  try {
+    const res = await sample.json([{ role: "user", content: `You edit a brand identity kit for the bitkit builder. Return only JSON of the form {"changes": <object>, "summary": "<one sentence>"}.\n"changes" is a partial copy of the draft below holding only the fields to change; arrays replace whole arrays. Use only these allowed values where they apply: ${JSON.stringify(ALLOWED())}. Colors are 6-digit hex. Never add fields that create, sign in to, or post on accounts.\n\nDraft:\n${JSON.stringify(d)}\n\nRequest: ${q}` }], { modelTier: "default" });
+    if (!res || typeof res.changes !== "object") throw new Error("no changes came back");
+    d = G.normalize(merge(d, res.changes));
+    toast = res.summary ? `Claude: ${res.summary}` : "Claude updated the kit."; $("#ask").value = "";
+    renderPanel(); $("#ask-status").textContent = toast;
+  } catch (e) {
+    $("#ask-status").textContent = e?.code === "not_granted" ? "Claude requests are off for this view." : e?.code === "rate_limited" ? "Too many requests; try again in a minute." : `That didn’t apply: ${e?.message || "unknown error"}.`;
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- events ---------- */
+function setPath(path, val) { const ks = path.split("."); let o = d; while (ks.length > 1) o = o[ks.shift()]; o[ks[0]] = val; }
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.dataset.bind) { let v = "num" in t.dataset ? Number(t.value) : t.value; if (t.dataset.bind === "handle.primary") v = v.trim().replace(/^@/, ""); if ("num" in t.dataset && !Number.isFinite(v)) return; setPath(t.dataset.bind, v); refresh(); }
+  else if (t.dataset.override) { const v = t.value.trim().replace(/^@/, ""); if (v) d.handle.overrides[t.dataset.override] = v; else delete d.handle.overrides[t.dataset.override]; refresh(); const a = $(`[data-override="${t.dataset.override}"]`); if (a) { a.focus(); a.setSelectionRange(a.value.length, a.value.length); } }
+  else if (t.dataset.bio) { if (t.value.trim()) d.voice.bios[t.dataset.bio] = t.value; else delete d.voice.bios[t.dataset.bio]; refresh(); }
+  else if (t.dataset.color) { d.palette[t.dataset.color] = t.value; $(`[data-hex="${t.dataset.color}"]`).value = t.value; $(`[data-well="${t.dataset.color}"]`).style.background = t.value; refresh(); }
+  else if (t.dataset.hex) { const v = t.value.trim().startsWith("#") ? t.value.trim() : "#" + t.value.trim(); d.palette[t.dataset.hex] = v; if (validHex(v)) { $(`[data-color="${t.dataset.hex}"]`).value = v; $(`[data-well="${t.dataset.hex}"]`).style.background = v; } refresh(); }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.dataset.toggle) { const [list, id] = t.dataset.toggle.split(":"); d[list] = t.checked ? [...new Set([...d[list], id])] : d[list].filter((x) => x !== id); refresh(); }
+  if (t.id === "f-import" && t.files?.[0]) t.files[0].text().then((txt) => { try {
+    const j = JSON.parse(txt); if (j.schema !== "bitkit.kit/v1") throw new Error("not a bitkit.kit/v1 file");
+    d = G.normalize({ ...j, platforms: (j.platforms || []).map((p) => (typeof p === "string" ? p : p.id)), palette: Object.fromEntries(["primary", "secondary", "accent", "ink", "paper"].map((n) => [n, j.palette?.[n]])), mark: { kind: j.mark?.kind, glyphs: j.mark?.glyphs } });
+    toast = `Imported ${d.brand.name}.`; renderPanel(); } catch (err) { toast = `That file didn’t import: ${err.message}.`; refresh(); } });
+});
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (e.key === "Enter" && t.dataset.add) { e.preventDefault(); const v = t.value.trim(); if (!v) return; if (t.dataset.add === "keywords") { if (d.brand.keywords.length < 5) d.brand.keywords.push(v); } else d.voice[t.dataset.add].push(v); t.value = ""; refresh(); }
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && t.id === "ask") askClaude();
+});
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.step) { step = Number(b.dataset.step); renderPanel(); $("#panel")?.scrollIntoView?.({ block: "start" }); return; }
+  if (b.dataset.pick) { d.handle.primary = b.dataset.pick; renderPanel(); return; }
+  if (b.dataset.del) { const [k, i] = b.dataset.del.split(":"); (k === "keywords" ? d.brand.keywords : d.voice[k]).splice(Number(i), 1); refresh(); return; }
+  if (b.dataset.preset) { const { name, ...pal } = G.PRESETS[Number(b.dataset.preset)]; d.palette = pal; renderPanel(); return; }
+  if (b.dataset.set) { const [path, v] = b.dataset.set.split("="); setPath(path, v); renderPanel(); return; }
+  if (b.dataset.file) { openFile = b.dataset.file; renderPreview(); return; }
+  if (b.dataset.domain) { d.deploy.domain = d.deploy.domain === b.dataset.domain ? "" : b.dataset.domain; refresh(); return; }
+  const act = b.dataset.act;
+  if (act === "next") { step = Math.min(step + 1, STEPS.length - 1); renderPanel(); $("#panel")?.scrollIntoView?.({ block: "start" }); }
+  else if (act === "prev") { step = Math.max(step - 1, 0); renderPanel(); }
+  else if (act === "plat-all") { d.platforms = G.PLATFORMS.map((p) => p.id); renderPanel(); }
+  else if (act === "plat-none") { d.platforms = []; renderPanel(); }
+  else if (act?.startsWith("dl-")) exportAs(act.slice(3));
+  else if (act === "publish") publishKit();
+  else if (act === "ds-zip") exportAs("ds");
+  else if (act === "ds-claude") createInClaude();
+  else if (act === "reset") { d = G.normalize(G.blank()); toast = "Started a fresh kit."; step = 0; renderPanel(); }
+});
+for (const [id, tab] of [["tab-book", "book"], ["tab-prof", "prof"], ["tab-files", "files"]]) $("#" + id).addEventListener("click", () => { previewTab = tab; renderPreview(); });
+$("#ask-btn").addEventListener("click", askClaude);
+$("#theme-btn").addEventListener("click", () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; });
+$("#app-mark").innerHTML = G.markSvg({ ...G.blank(), palette: { ...G.PRESETS[0] }, mark: { kind: "seal", glyphs: "b" }, type: { heading: "Bricolage Grotesque" } }, 30);
+renderPanel();
+connectClaude();
+</script>
+</body>
+</html>

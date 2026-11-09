@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>bitkit · Brand identity in a box</title>
+<meta name="description" content="Name your brand, pick your handle, and get a design system, a website, and a launch checklist. Hosted on Cloudflare, built with your own Claude.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f7f4f0;--raised:#fffdfa;--ink:#17161a;--muted:#55505a;--line:#e3ddd5;--wax:#8e1b2e;--on-wax:#fff;--gold:#e8b54a;--slate:#2b3a55;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#121114;--raised:#1b191d;--ink:#f1ece6;--muted:#b3acb6;--line:#2f2b33;--wax:#e0566e;--on-wax:#1a0a0e;--gold:#e8b54a;--slate:#8fa3c7;color-scheme:dark}}
+*{box-sizing:border-box}html{scroll-padding-top:72px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 "Hanken Grotesk",system-ui,sans-serif}
+a{color:inherit}.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+header{position:sticky;top:0;z-index:5;background:color-mix(in oklab,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font:800 22px/1 "Bricolage Grotesque",system-ui;text-decoration:none}.logo svg{width:34px;height:34px}
+nav{display:flex;gap:22px;align-items:center;font-size:15px}nav a{text-decoration:none;color:var(--muted)}nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:12px 18px;font-weight:600;text-decoration:none;border:1px solid transparent}
+.btn.p{background:var(--wax);color:var(--on-wax)}.btn.s{border-color:var(--line);background:var(--raised)}
+.hero{padding:clamp(56px,10vw,120px) 0 clamp(40px,7vw,80px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(24px,5vw,64px);align-items:center}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui;letter-spacing:-.025em;line-height:1.02;margin:0}
+h1{font-size:clamp(44px,7.4vw,92px);font-weight:800}h2{font-size:clamp(32px,4.4vw,52px);font-weight:800}h3{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.lede{font-size:clamp(18px,2vw,21px);color:var(--muted);max-width:34ch;margin:22px 0 30px}.cta{display:flex;gap:12px;flex-wrap:wrap}
+.kit{background:var(--raised);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;gap:14px;box-shadow:0 30px 60px -40px rgba(0,0,0,.35)}
+.kit .row{display:flex;align-items:center;gap:12px}.kit .seal{width:56px;height:56px;border-radius:50%;background:#5a3a22;display:grid;place-items:center;color:#fff;font:700 26px "DM Serif Display",Georgia,serif}
+.kit b{font:700 20px "DM Serif Display",Georgia,serif}.kit .h{font:500 13px ui-monospace,Menlo,monospace;color:var(--muted)}
+.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.chips i{aspect-ratio:1;border-radius:8px;border:1px solid var(--line)}
+.files{font:12.5px/1.75 ui-monospace,Menlo,monospace;color:var(--muted);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0}
+.files em{font-style:normal;color:var(--wax)}
+section{padding:clamp(56px,8vw,96px) 0;border-top:1px solid var(--line)}.kicker{color:var(--muted);max-width:56ch;margin:14px 0 36px;font-size:18px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;counter-reset:s}
+.step{background:var(--raised);border:1px solid var(--line);border-radius:18px;padding:22px;counter-increment:s}
+.step:before{content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--wax);color:var(--on-wax);font:700 14px "Hanken Grotesk";margin-bottom:14px}
+.step p{color:var(--muted);margin:8px 0 0;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.grid div{background:var(--raised);padding:22px}.grid p{margin:8px 0 0;color:var(--muted);font-size:16px}
+.claude{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,56px);align-items:start}
+pre{margin:0;background:#17161a;color:#f1ece6;border-radius:16px;padding:18px 20px;overflow-x:auto;font:13.5px/1.7 ui-monospace,Menlo,monospace}pre .c{color:#8f8a93}pre .k{color:#e8b54a}
+.note{font-size:14px;color:var(--muted)}footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:860px){.hero,.claude{grid-template-columns:1fr}nav a:not(.btn){display:none}}
+</style></head><body>
+<header><div class="wrap"><a class="logo" href="/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="44" height="44" role="img" aria-label="bitkit mark"><polygon points="119.20,60.00 115.79,64.88 112.00,69.17 114.09,74.49 115.63,80.25 110.75,83.67 105.73,86.40 105.87,92.12 105.35,98.05 99.60,99.60 93.94,100.45 92.12,105.87 89.60,111.27 83.67,110.75 78.06,109.62 74.49,114.09 70.28,118.30 64.88,115.79 60.00,112.80 55.12,115.79 49.72,118.30 45.51,114.09 41.94,109.62 36.33,110.75 30.40,111.27 27.88,105.87 26.06,100.45 20.40,99.60 14.65,98.05 14.13,92.12 14.27,86.40 9.25,83.67 4.37,80.25 5.91,74.49 8.00,69.17 4.21,64.88 0.80,60.00 4.21,55.12 8.00,50.83 5.91,45.51 4.37,39.75 9.25,36.33 14.27,33.60 14.13,27.88 14.65,21.95 20.40,20.40 26.06,19.55 27.88,14.13 30.40,8.73 36.33,9.25 41.94,10.38 45.51,5.91 49.72,1.70 55.12,4.21 60.00,7.20 64.88,4.21 70.28,1.70 74.49,5.91 78.06,10.38 83.67,9.25 89.60,8.73 92.12,14.13 93.94,19.55 99.60,20.40 105.35,21.95 105.87,27.88 105.73,33.60 110.75,36.33 115.63,39.75 114.09,45.51 112.00,50.83 115.79,55.12 119.20,60.00" fill="#8e1b2e"/><circle cx="60" cy="60" r="44" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="1.5"/><text x="60" y="61" text-anchor="middle" dominant-baseline="central" font-family='"Bricolage Grotesque", system-ui, sans-serif' font-weight="700" font-size="54" fill="#ffffff" letter-spacing="-1">b</text></svg>bitkit</a><nav><a href="#how">How it works</a><a href="#get">What you get</a><a href="#claude">Claude</a><a class="btn p" href="https://app.bitkit.sh/">Start your kit</a></nav></div></header>
+<main>
+<div class="wrap hero">
+  <div><h1>Brand identity in a box.</h1>
+  <p class="lede">Name your brand and pick your handle. bitkit builds the design system, the website, and the launch checklist, and runs it all for you on Cloudflare.</p>
+  <div class="cta"><a class="btn p" href="https://app.bitkit.sh/">Start your kit</a><a class="btn s" href="https://kit-coopers-coffee.bitkit.sh/">See a live kit</a></div></div>
+  <div class="kit" aria-label="Example kit for Cooper’s Coffee">
+    <div class="row"><div class="seal">C</div><div><b>Cooper’s Coffee</b><div class="h">@cooperscoffee · coopers.coffee</div></div></div>
+    <div class="chips"><i style="background:#5a3a22"></i><i style="background:#c9a27e"></i><i style="background:#2f6f5e"></i><i style="background:#1f1611"></i><i style="background:#faf6f1"></i></div>
+    <p class="files">bitkit.kit.json<br>brand/ <em>brand book, tokens, profile sheets</em><br>design-system/ <em>for Claude</em><br>site/ <em>EmDash website</em><br>ACCOUNTS.md <em>your launch checklist</em></p>
+  </div>
+</div>
+<section id="how"><div class="wrap"><h2>From a name to a running brand.</h2><p class="kicker">Four steps, all in your browser and your own Claude. No Cloudflare, GitHub, or devops knowledge needed.</p>
+<div class="steps">
+  <div class="step"><h3>Customize</h3><p>Choose your name, handle, platforms, colors, type, and voice. bitkit checks every handle and bio against each platform’s rules.</p></div>
+  <div class="step"><h3>Design with Claude</h3><p>Add the bitkit plugin to your Claude. It fetches your kit and builds a full design system with you, then hands it back.</p></div>
+  <div class="step"><h3>Deploy</h3><p>bitkit publishes your website and your design system on Cloudflare: yours at your-name.bitkit.sh right away, or on your own domain.</p></div>
+  <div class="step"><h3>Launch</h3><p>Work through your checklist. You create each social account yourself, with every field ready to paste.</p></div>
+</div></div></section>
+<section id="get"><div class="wrap"><h2>What you get.</h2><p class="kicker">One kit file drives everything, so changing a color or a handle updates every surface.</p>
+<div class="grid">
+  <div><h3>Design system</h3><p>Tokens for light and dark, type, spacing, a brand book, and components, built in your Claude and published at kit.your-domain.</p></div>
+  <div><h3>Website</h3><p>An EmDash site on Cloudflare with an editor for your pages, seeded with copy in your brand’s voice.</p></div>
+  <div><h3>Handles and profiles</h3><p>One handle checked across 14 platforms, with a profile sheet for each: bio at the right length, image sizes, links.</p></div>
+  <div><h3>Domain search</h3><p>Live availability and pricing from Cloudflare Registrar. You register the one you pick.</p></div>
+  <div><h3>Cloudflare services</h3><p>Storage, database, AI, analytics, and email wired into your site, with nothing to configure.</p></div>
+  <div><h3>Everything, downloadable</h3><p>Export the whole kit anytime: brand files, website code, and a one-line setup command.</p></div>
+</div></div></section>
+<section id="claude"><div class="wrap claude"><div><h2>Bring your own Claude.</h2><p class="kicker">The bitkit plugin connects your Claude to your kit. Claude reads your kit, builds the design system with you, and sends it back for bitkit to publish.</p>
+<div class="cta"><a class="btn p" href="https://app.bitkit.sh/plugin.zip">Download the plugin</a><a class="btn s" href="https://app.bitkit.sh/skill.zip">Skill only</a></div>
+<p class="note">The plugin includes the bitkit skill and the connector at app.bitkit.sh/mcp. Claude never creates accounts or registers domains for you.</p></div>
+<pre><span class="c"># In Claude, after adding the plugin</span>
+<span class="k">you</span>    Build my design system from kit gmzz7vbo5w3pvb3iix7q
+<span class="k">claude</span> Reading your kit… creating “Cooper’s Coffee”
+       9 color tokens, 7 type styles, 3 components
+<span class="k">you</span>    Warmer primary, and add a menu card
+<span class="k">claude</span> Done. Sending it to bitkit…
+       Live at kit.coopers.coffee</pre></div></section>
+</main>
+<footer><div class="wrap"><span>bitkit · brand identity kits on Cloudflare</span><span><a href="https://app.bitkit.sh/">Builder</a> · <a href="https://app.bitkit.sh/mcp">MCP</a></span></div></footer>
+</body></html>
