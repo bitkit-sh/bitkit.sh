@@ -2,11 +2,11 @@
 // Reads need only the kit id (an unguessable 20-character id). Writes also need the kit's edit key.
 import bitkit from "./generator.js";
 
-type Ctx = { env: Env; origin: string };
+type Ctx = { env: Env; origin: string; headerKey: string | null };
 type Tool = { name: string; description: string; inputSchema: object; run: (args: any, ctx: Ctx) => Promise<unknown> };
 const VERSIONS = ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"];
 const KIT = { type: "string", pattern: "^[a-z2-7]{20}$", description: "Kit id from the bitkit setup command, e.g. gmzz7vbo5w3pvb3iix7q" };
-const KEY = { type: "string", description: "The kit's edit key, shown once when the kit was published" };
+const KEY = { type: "string", description: "The kit's edit key. Omit it when the connector sends the key in an x-bitkit-key or x-auth-token header." };
 
 const hex = async (s: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join("");
 async function loadKit(env: Env, id: string) {
@@ -16,7 +16,8 @@ async function loadKit(env: Env, id: string) {
   if (!row || !obj) throw new Error("No kit with that id");
   return { row, kit: bitkit.normalize(await obj.json()) };
 }
-async function authorize(env: Env, id: string, key: string) {
+async function authorize(env: Env, id: string, key: string | undefined, headerKey: string | null = null) {
+  key = key || headerKey || undefined;
   const { row, kit } = await loadKit(env, id);
   if (!row.key_hash || typeof key !== "string" || (await hex(key)) !== row.key_hash) throw new Error("The edit key does not match this kit");
   return { row, kit };
@@ -33,8 +34,8 @@ export const TOOLS: Tool[] = [
     run: async ({ kit_id }, { env }) => { const { kit } = await loadKit(env, kit_id); kit.modules = [...new Set([...kit.modules, "design-system"])];
       const files = bitkit.generate(kit).files; return Object.fromEntries(Object.entries(files).filter(([p]) => p.startsWith("design-system/project/")).map(([p, c]) => [p.slice("design-system/".length), c])); } },
   { name: "update_kit", description: "Change a kit. Pass only the fields to change; arrays replace whole arrays. Returns the updated kit or the problems that blocked it.",
-    inputSchema: { type: "object", properties: { kit_id: KIT, key: KEY, changes: { type: "object", description: "Partial bitkit.kit.json" } }, required: ["kit_id", "key", "changes"] },
-    run: async ({ kit_id, key, changes }, { env }) => { const { kit } = await authorize(env, kit_id, key); const next = bitkit.normalize(merge(kit, changes));
+    inputSchema: { type: "object", properties: { kit_id: KIT, key: KEY, changes: { type: "object", description: "Partial bitkit.kit.json" } }, required: ["kit_id", "changes"] },
+    run: async ({ kit_id, key, changes }, { env, headerKey }) => { const { kit } = await authorize(env, kit_id, key, headerKey); const next = bitkit.normalize(merge(kit, changes));
       const problems = bitkit.problems(next); if (problems.length) return { updated: false, problems };
       await env.KITS.put(`kits/${kit_id}/bitkit.kit.json`, JSON.stringify(next), { httpMetadata: { contentType: "application/json" } });
       await env.KITS.delete(`kits/${kit_id}/bundle.tar.gz`);
@@ -43,8 +44,8 @@ export const TOOLS: Tool[] = [
   { name: "submit_design_system", description: "Hand the finished Claude Design System back to bitkit. Send every file under project/ (tokens.json, README.md, design-system.json, components/*/README.md and preview.html) as text, and binary assets (images, fonts) as base64. bitkit then serves it at the kit site.",
     inputSchema: { type: "object", properties: { kit_id: KIT, key: KEY,
       files: { type: "object", additionalProperties: { type: "string" }, description: "Map of project/... path to file text" },
-      assets: { type: "object", additionalProperties: { type: "string" }, description: "Map of project/assets/... path to base64 bytes" } }, required: ["kit_id", "key", "files"] },
-    run: async ({ kit_id, key, files, assets = {} }, { env, origin }) => { await authorize(env, kit_id, key);
+      assets: { type: "object", additionalProperties: { type: "string" }, description: "Map of project/assets/... path to base64 bytes" } }, required: ["kit_id", "files"] },
+    run: async ({ kit_id, key, files, assets = {} }, { env, origin, headerKey }) => { await authorize(env, kit_id, key, headerKey);
       const all = { ...files, ...assets }; const bad = Object.keys(all).filter((p) => !safePath(p));
       if (bad.length) return { stored: false, problem: `Paths must start with project/ and use letters, digits, and ./_-~: ${bad.slice(0, 5).join(", ")}` };
       if (!files["project/tokens.json"] && !files["project/README.md"]) return { stored: false, problem: "Include at least project/README.md or project/tokens.json" };
@@ -63,17 +64,18 @@ export const TOOLS: Tool[] = [
       return { brand: kit.brand.name, setup: `curl -fsSL ${origin}/setup/${kit_id} | sh`, kit_site: `${origin}/kits/${kit_id}/`, design_system: system ? "submitted" : "seed only",
         website: tenant ? `https://${tenant.hostname}` : null, tenant_status: tenant?.status ?? "not deployed", deploy_request: req ?? null }; } },
   { name: "request_deploy", description: "Ask bitkit to deploy the kit's website on the owner's behalf (EmDash marketing site on bitkit's Cloudflare platform). Never creates social or registrar accounts.",
-    inputSchema: { type: "object", properties: { kit_id: KIT, key: KEY }, required: ["kit_id", "key"] },
-    run: async ({ kit_id, key }, { env }) => { await authorize(env, kit_id, key);
+    inputSchema: { type: "object", properties: { kit_id: KIT, key: KEY }, required: ["kit_id"] },
+    run: async ({ kit_id, key }, { env, headerKey }) => { await authorize(env, kit_id, key, headerKey);
       await env.REGISTRY.prepare("INSERT INTO deploy_requests (kit_id, status, created_at) VALUES (?, 'requested', ?)").bind(kit_id, Date.now()).run();
       return { requested: true, note: "Queued. kit_status shows progress." }; } }
 ];
 
-const INSTRUCTIONS = "bitkit builds brand identity kits. Start with get_kit, then get_design_seed to create the owner's Claude Design System from those files exactly. When the owner is happy, send the system back with submit_design_system and offer request_deploy. Write tools need the kit's edit key; ask the owner for it and never repeat it back. Never create, sign in to, or post from social or registrar accounts; the owner does that.";
+const INSTRUCTIONS = "bitkit builds brand identity kits. Start with get_kit, then get_design_seed to create the owner's Claude Design System from those files exactly. When the owner is happy, send the system back with submit_design_system and offer request_deploy. Write tools need the kit's edit key. If the connector sends it in a header, omit the key argument; otherwise ask the owner for it and never repeat it back. Never create, sign in to, or post from social or registrar accounts; the owner does that.";
 
 export async function handleMcp(request: Request, env: Env, origin: string): Promise<Response> {
   if (request.method === "GET" || request.method === "DELETE") return new Response(null, { status: 405, headers: { allow: "POST" } });
   if (request.method !== "POST") return new Response(null, { status: 405 });
+  const headerKey = request.headers.get("x-bitkit-key") ?? request.headers.get("x-auth-token");
   let msg: any; try { msg = await request.json(); } catch { return Response.json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }, { status: 400 }); }
   const one = async (m: any) => {
     if (m.id === undefined) return null; // notification
@@ -87,7 +89,7 @@ export async function handleMcp(request: Request, env: Env, origin: string): Pro
     if (m.method === "tools/call") {
       const t = TOOLS.find((x) => x.name === m.params?.name);
       if (!t) return { jsonrpc: "2.0", id: m.id, error: { code: -32602, message: `Unknown tool ${m.params?.name}` } };
-      try { const out = await t.run(m.params?.arguments ?? {}, { env, origin }); return ok({ content: [{ type: "text", text: JSON.stringify(out, null, 2) }], structuredContent: out && typeof out === "object" && !Array.isArray(out) ? out : { result: out } }); }
+      try { const out = await t.run(m.params?.arguments ?? {}, { env, origin, headerKey }); return ok({ content: [{ type: "text", text: JSON.stringify(out, null, 2) }], structuredContent: out && typeof out === "object" && !Array.isArray(out) ? out : { result: out } }); }
       catch (e) { return ok({ content: [{ type: "text", text: e instanceof Error ? e.message : String(e) }], isError: true }); }
     }
     return { jsonrpc: "2.0", id: m.id, error: { code: -32601, message: `Method not found: ${m.method}` } };
