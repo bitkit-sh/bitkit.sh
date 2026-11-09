@@ -60,12 +60,13 @@ function app(env: Env, host: string) {
     code: CodeProvider(CodeUI({
       sendCode: async (claims, code) => {
         if (!claims.email) throw new Error("email required");
+        const link = `https://${host}/code/link?code=${encodeURIComponent(code)}`;
         await env.EMAIL.send({
           to: claims.email,
           from: { email: SENDER, name: brand.title },
           subject: `Your ${brand.title} sign-in code: ${code}`,
-          text: `Your ${brand.title} sign-in code is ${code}.\n\nIt expires soon. If you did not ask for it, ignore this email.`,
-          html: `<p>Your ${brand.title} sign-in code is</p><p style="font:700 28px/1 ui-monospace,Menlo,monospace;letter-spacing:4px">${code}</p><p>It expires soon. If you did not ask for it, ignore this email.</p>`,
+          text: `Sign in to ${brand.title}:\n${link}\n\nOr type this code: ${code}\n\nOpen the link in the same browser where you started signing in. It expires soon. If you did not ask for it, ignore this email.`,
+          html: `<p><a href="${link}" style="display:inline-block;background:${brand.primary};color:#fff;padding:12px 20px;border-radius:8px;font:600 16px system-ui,sans-serif;text-decoration:none">Sign in to ${brand.title}</a></p><p>Or type this code:</p><p style="font:700 28px/1 ui-monospace,Menlo,monospace;letter-spacing:4px">${code}</p><p style="color:#555">Open the link in the same browser where you started signing in. It expires soon. If you did not ask for it, ignore this email.</p>`,
         });
       },
     })),
@@ -90,10 +91,23 @@ function app(env: Env, host: string) {
   });
 }
 
+// Sign-in link from the email: submits the code for the user, in the browser that started sign-in.
+function linkPage(request: Request, url: URL): Response {
+  const code = (url.searchParams.get("code") ?? "").replace(/[^0-9A-Za-z]/g, "").slice(0, 12);
+  const brand = BRANDS[url.hostname] ?? BRANDS["auth.bitkit.sh"];
+  const started = /(?:^|;\s*)provider=/.test(request.headers.get("cookie") ?? "");
+  const head = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in to ${brand.title}</title><style>body{font:16px/1.5 system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0}main{max-width:380px;padding:24px;text-align:center}code{font:700 24px ui-monospace,Menlo,monospace;letter-spacing:3px}button{background:${brand.primary};color:#fff;border:0;border-radius:8px;padding:12px 20px;font:600 16px system-ui}</style><main><img src="${brand.logo}" width="40" height="40" alt="">`;
+  const body = started && code
+    ? `<p>Signing you in…</p><form id="f" method="post" action="/code/authorize"><input type="hidden" name="action" value="verify"><input type="hidden" name="code" value="${code}"><noscript><button>Continue</button></noscript></form><script>document.getElementById("f").submit()</script>`
+    : `<p>Open this link in the browser where you started signing in, or type this code there:</p><p><code>${code || "?"}</code></p>`;
+  return new Response(head + body + "</main>", { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" } });
+}
+
 export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
     const origin = url.origin;
+    if (url.pathname === "/code/link" && request.method === "GET") return linkPage(request, url);
     // MCP clients (Claude) look for a registration endpoint. OpenAuth accepts any client id and
     // checks redirect URIs in allow(), so registration simply echoes the client back.
     if (url.pathname === "/register" && request.method === "POST") {
