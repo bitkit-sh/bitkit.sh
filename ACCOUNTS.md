@@ -21,7 +21,6 @@ Platform rules were last reviewed 2026-11-08. Check each platform’s current ru
 ## Cloudflare
 
 - [ ] Create or sign in to your Cloudflare account at https://dash.cloudflare.com/sign-up
-- [ ] Optional: run `just preview` for a temporary preview, then claim it yourself within 60 minutes
 - [ ] For CI deploys, create an API token scoped to Workers and add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets
 
 ## Repository

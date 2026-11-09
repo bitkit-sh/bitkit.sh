@@ -4,7 +4,6 @@ bitkit selected the **Owner’s account** hosting model.
 
 | Model | Who owns the Cloudflare account | How code gets there |
 | --- | --- | --- |
-| Hand off | The brand owner | Temporary account, claimed by the owner within 60 minutes |
 | bitkit platform | bitkit (platform account) | `cf deploy --dispatch-namespace bitkit-tenants` into a Workers for Platforms namespace |
 | Owner’s account | The brand owner | Owner connects their account (Cloudflare OAuth client), then CI deploys |
 

@@ -9,4 +9,4 @@ includes:
 # Delivery and Trust
 
 - Delivery Lead: Prepares the launch: ACCOUNTS.md, profile sheets, and the order in which the owner creates accounts.
-- Security Lead: Guards credentials and supply chain: claim links, tokens, Action pins, dependency scores.
+- Security Lead: Guards credentials and supply chain: tokens, Action pins, dependency scores.

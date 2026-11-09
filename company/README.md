@@ -10,12 +10,12 @@ Ship identity kits that brand owners can launch the same day, generated from one
 | Brand Lead | Creative Director | director | brand-voice, brand-tokens, kit-editor |
 | Identity Designer | Visual Identity Designer | brand-lead | brand-tokens |
 | Copywriter | Brand Copywriter | brand-lead | brand-voice, account-launch |
-| CTO | Chief Technology Officer | director | kit-editor, cf-preview-claim |
-| Platform Engineer | Platform Engineer | cto | kit-editor, brand-tokens, cf-preview-claim |
-| Edge DevOps | Edge Deploy Engineer | cto | cf-preview-claim |
+| CTO | Chief Technology Officer | director | kit-editor |
+| Platform Engineer | Platform Engineer | cto | kit-editor, brand-tokens |
+| Edge DevOps | Edge Deploy Engineer | cto | none |
 | QA Engineer | QA Engineer | cto | none |
 | Delivery Lead | Launch and Delivery Lead | director | account-launch |
-| Security Lead | Security and Trust | director | cf-preview-claim |
+| Security Lead | Security and Trust | director | none |
 
 ## Import
 

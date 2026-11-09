@@ -1,7 +1,7 @@
 {
   "$schema": "./schema/bitkit.kit.v1.json",
   "schema": "bitkit.kit/v1",
-  "generatedAt": "2026-11-08T20:00:00Z",
+  "generatedAt": "2026-11-09T06:27:46Z",
   "brand": {
     "name": "bitkit",
     "slug": "coopers-coffee",
@@ -141,8 +141,7 @@
   },
   "deploy": {
     "worker": "bitkit-site",
-    "domain": "bitkit.sh",
-    "preview": "temporary"
+    "domain": "bitkit.sh"
   },
   "domain": {
     "query": "bitkit",
@@ -194,7 +193,6 @@
     "brand-tokens",
     "kit-editor",
     "account-launch",
-    "cf-preview-claim",
     "domain-search"
   ],
   "agents": {
@@ -212,6 +210,7 @@
     "mcp",
     "skills",
     "agents",
+    "design-system",
     "a2ui",
     "platform"
   ],

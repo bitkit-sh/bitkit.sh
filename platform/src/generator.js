@@ -1,4 +1,4 @@
-// bitkit generator, copied from the builder at 2026-11-09T06:22:02Z. Regenerate rather than edit.
+// bitkit generator, copied from the builder at 2026-11-09T06:27:46Z. Regenerate rather than edit.
 "use strict";
 /* bitkit generator: pure functions from a draft kit to a file map. No DOM access, so it runs in the page, in Bun, and in tests. */
 const BITKIT = (() => {
@@ -63,7 +63,6 @@ const BITKIT = (() => {
     { id: "loader", name: "Dynamic Workers", binding: "LOADER", helper: "bindings.workerLoader()", why: "Run generated code in isolates on demand" }
   ];
   const HOSTING = [
-    { id: "handoff", name: "Hand off", why: "Preview on a temporary account; the owner claims it and owns everything" },
     { id: "platform", name: "bitkit platform", why: "Runs in bitkit’s account as a Workers for Platforms tenant" },
     { id: "connect", name: "Owner’s account", why: "Deployed into the owner’s own account after they connect it" }
   ];
@@ -78,12 +77,11 @@ const BITKIT = (() => {
     { id: "brand-tokens", name: "Brand tokens", why: "Applies palette, type, radius from tokens.css" },
     { id: "kit-editor", name: "Kit editor", why: "Edits bitkit.kit.json and regenerates the bundle" },
     { id: "account-launch", name: "Account launch prep", why: "Prepares profile sheets; you create the accounts" },
-    { id: "cf-preview-claim", name: "Preview and claim", why: "Temporary Cloudflare previews with safe claim links" },
     { id: "domain-search", name: "Domain search", why: "Finds and checks domains with cf; the owner registers" }
   ];
   const DEVEX = [
     { id: "mise", name: "mise", why: "Pins bun, node, just, lefthook" },
-    { id: "just", name: "just", why: "One task runner: check, dev, preview, deploy" },
+    { id: "just", name: "just", why: "One task runner: check, dev, deploy" },
     { id: "lefthook", name: "lefthook", why: "Pre-commit lint and kit validation" },
     { id: "oxlint", name: "oxlint", why: "Lint" },
     { id: "biome", name: "Biome", why: "Format and lint" },
@@ -95,7 +93,7 @@ const BITKIT = (() => {
     { id: "brand", name: "Brand kit", why: "Brand book, guide, tokens, mark, profile sheets", locked: true },
     { id: "accounts", name: "Account checklist", why: "ACCOUNTS.md: what you sign up for, in order" },
     { id: "devex", name: "Dev experience", why: "Tooling and editor config" },
-    { id: "deploy", name: "Cloudflare project", why: "cloudflare.config.ts, Worker, Vite, domain and preview scripts" },
+    { id: "deploy", name: "Cloudflare project", why: "cloudflare.config.ts, Worker, Vite, and domain scripts" },
     { id: "platform", name: "Cloudflare for Platforms", why: "platform/: dispatcher, Dynamic Workers, tenant provisioning" },
     { id: "ci", name: "GitHub Actions", why: "Workflows you picked" },
     { id: "mcp", name: "MCP config", why: ".mcp.json for Claude Code and other clients" },
@@ -113,18 +111,18 @@ const BITKIT = (() => {
       job: "Produces the mark, avatar, and banner assets at each platform’s sizes from the kit.", triggers: "Mark or palette changes, a new platform in the kit.", does: "Exports assets, checks contrast at small sizes, keeps assets/ in sync with tokens.", produces: "Asset files and a size table per platform.", handoff: "Brand Lead for approval." },
     { slug: "copywriter", name: "Copywriter", title: "Brand Copywriter", role: "general", icon: "message-square", reportsTo: "brand-lead", team: "creative", sizes: ["full"], model: "sonnet", skills: ["brand-voice", "account-launch"],
       job: "Writes bios, taglines, and first posts in the kit’s voice within each platform’s limits.", triggers: "Voice changes, new platforms, launch preparation.", does: "Drafts per-platform bios and launch copy, checks limits, flags conflicts with the do and avoid lists.", produces: "Copy in platforms/*.md and a launch copy doc.", handoff: "Brand Lead for review, Delivery Lead for launch." },
-    { slug: "cto", name: "CTO", title: "Chief Technology Officer", role: "cto", icon: "cpu", reportsTo: "director", team: "engineering", sizes: ["full"], model: "opus", skills: ["kit-editor", "cf-preview-claim"],
+    { slug: "cto", name: "CTO", title: "Chief Technology Officer", role: "cto", icon: "cpu", reportsTo: "director", team: "engineering", sizes: ["full"], model: "opus", skills: ["kit-editor"],
       job: "Owns the repository, the generator, CI, and the Cloudflare deployment path.", triggers: "Failing checks, dependency or Action updates, deploy requests.", does: "Reviews engineering changes, keeps pins current, approves workflow changes.", produces: "Reviewed pull requests, upgrade plans.", handoff: "Platform Engineer for implementation, QA for verification." },
-    { slug: "platform-engineer", name: "Platform Engineer", title: "Platform Engineer", role: "engineer", icon: "code", reportsTo: "cto", team: "engineering", sizes: ["lean", "full"], model: "sonnet", skills: ["kit-editor", "brand-tokens", "cf-preview-claim"],
+    { slug: "platform-engineer", name: "Platform Engineer", title: "Platform Engineer", role: "engineer", icon: "code", reportsTo: "cto", team: "engineering", sizes: ["lean", "full"], model: "sonnet", skills: ["kit-editor", "brand-tokens"],
       job: "Builds the brand site, scripts, and workflows generated from the kit.", triggers: "Issues in the web-presence and dev-platform projects.", does: "Implements changes with bun test and Vitest, runs just check, opens pull requests.", produces: "Pull requests with passing checks.", handoff: "QA Engineer, then CTO." },
-    { slug: "edge-devops", name: "Edge DevOps", title: "Edge Deploy Engineer", role: "devops", icon: "globe", reportsTo: "cto", team: "engineering", sizes: ["full"], model: "sonnet", skills: ["cf-preview-claim"],
-      job: "Runs temporary previews and owns wrangler.jsonc, deploy scripts, and the deploy workflow.", triggers: "Preview requests, deploy workflow failures.", does: "Deploys previews with wrangler deploy --temporary from an isolated config directory, verifies them, hands the claim link only to the brand owner.", produces: "Preview URLs and a deploy log without credentials.", handoff: "Delivery Lead for the claim handoff." },
+    { slug: "edge-devops", name: "Edge DevOps", title: "Edge Deploy Engineer", role: "devops", icon: "globe", reportsTo: "cto", team: "engineering", sizes: ["full"], model: "sonnet", skills: [],
+      job: "Owns cloudflare.config.ts, deploy scripts, and the deploy workflow into the Workers for Platforms namespace.", triggers: "Deploy requests, deploy workflow failures.", does: "Builds with cf build, deploys the tenant Worker after board approval, and verifies it at the tenant hostname.", produces: "A deploy log without credentials.", handoff: "Delivery Lead for launch." },
     { slug: "qa", name: "QA Engineer", title: "QA Engineer", role: "qa", icon: "bug", reportsTo: "cto", team: "engineering", sizes: ["full"], model: "sonnet",
       job: "Verifies every generated surface: brand book offline render, contrast, handle rules, bio limits.", triggers: "Pull requests, kit changes.", does: "Runs the kit validator and visual checks, files evidence-backed findings.", produces: "Pass or fail verdicts with evidence.", handoff: "Author of the change." },
     { slug: "delivery-lead", name: "Delivery Lead", title: "Launch and Delivery Lead", role: "pm", icon: "rocket", reportsTo: "director", team: "delivery", sizes: ["lean", "full"], model: "sonnet", skills: ["account-launch"],
       job: "Prepares the launch: ACCOUNTS.md, profile sheets, and the order in which the owner creates accounts.", triggers: "Kit ready for launch, new platform selected.", does: "Builds the checklist, confirms every field is ready to paste, tracks which accounts the owner reports as created.", produces: "An up-to-date ACCOUNTS.md and a launch status note.", handoff: "The board, who creates every account personally." },
-    { slug: "security", name: "Security Lead", title: "Security and Trust", role: "security", icon: "shield", reportsTo: "director", team: "delivery", sizes: ["full"], model: "sonnet", skills: ["cf-preview-claim"],
-      job: "Guards credentials and supply chain: claim links, tokens, Action pins, dependency scores.", triggers: "New dependencies, workflow edits, preview handoffs.", does: "Reviews pins and permissions, checks that claim links and tokens never reach issues or logs.", produces: "Findings with severity and a fix.", handoff: "CTO for remediation." }
+    { slug: "security", name: "Security Lead", title: "Security and Trust", role: "security", icon: "shield", reportsTo: "director", team: "delivery", sizes: ["full"], model: "sonnet", skills: [],
+      job: "Guards credentials and supply chain: tokens, Action pins, dependency scores.", triggers: "New dependencies, workflow edits, deploy changes.", does: "Reviews pins and permissions, checks that tokens never reach issues or logs.", produces: "Findings with severity and a fix.", handoff: "CTO for remediation." }
   ];
 
   /* ---------- helpers ---------- */
@@ -154,14 +152,14 @@ const BITKIT = (() => {
       type: { heading: "DM Serif Display", body: "Work Sans", scale: 1.25 }, shape: { radius: 10 }, mark: { kind: "circle", glyphs: "C" },
       voice: { formality: 0.6, playfulness: 0.5, boldness: 0.4, do: ["Name the origin and the roast date", "Greet regulars by their usual"], dont: ["Coffee puns in every post", "Discount-first language"], bio: "Small-batch coffee roasted in the back room and poured out front. Beans roasted Tuesday and Friday, open daily from 6.", bios: {} },
       repo: { host: "github", owner: "coopers-coffee", name: "brand" },
-      deploy: { worker: "coopers-coffee", domain: "", preview: "temporary" },
+      deploy: { worker: "coopers-coffee", domain: "" },
       domain: { query: "coopers coffee", results: [], checkedAt: "", account: "" },
       services: ["kv", "d1", "r2", "ai", "analytics"],
       hosting: { model: "platform", namespace: "bitkit-tenants", platformZone: "bitkit.sh" },
       devex: ["mise", "just", "lefthook", "oxlint", "biome", "editorconfig", "devcontainer", "vitest"],
       ci: ["ci", "deploy", "preview", "actions-audit"],
       mcp: ["cloudflare-docs", "cloudflare-bindings", "cloudflare-observability", "github", "context7"],
-      skills: ["brand-voice", "brand-tokens", "kit-editor", "account-launch", "cf-preview-claim", "domain-search"],
+      skills: ["brand-voice", "brand-tokens", "kit-editor", "account-launch", "domain-search"],
       agents: { purpose: "brand", size: "lean", budgetCents: 2500, timezone: "America/Chicago" },
       publish: { id: "", setup: "", publishedAt: "" },
       modules: MODULES.map((m) => m.id).filter((id) => id !== "platform")
@@ -176,6 +174,10 @@ const BITKIT = (() => {
       const [a, c] = k.split("."); if (c) { if (!Array.isArray(out[a][c])) out[a][c] = b[a][c]; } else if (!Array.isArray(out[a])) out[a] = b[a];
     }
     if (!out.modules.includes("brand")) out.modules.unshift("brand");
+    // Sites run on the bitkit platform (Workers for Platforms) or the owner’s own account; older kits may name models or skills that no longer exist.
+    if (!HOSTING.some((h) => h.id === out.hosting.model)) out.hosting.model = "platform";
+    out.skills = out.skills.filter((s) => s !== "cf-preview-claim");
+    delete out.deploy.preview;
     out.schema = "bitkit.kit/v1";
     return out;
   }
@@ -301,7 +303,7 @@ footer{margin-top:64px;font-size:.85rem;opacity:.7}
       `## Checklist`, ``,
       ...k.platforms.map((p) => `- [ ] **${p.name}** as @${p.handle}: sign up at ${p.signup}, then fill the profile from [brand/platforms/${p.id}.md](brand/platforms/${p.id}.md)`), ``,
       `## Domain`, ``, ...(k.domain.results.filter((r) => r.registrable).slice(0, 5).map((r) => `- [ ] ${r.name}: ${r.registration_cost ? `$${r.registration_cost} first year, $${r.renewal_cost} renewal` : "check price"} (checked ${k.domain.checkedAt || "not yet"})`)), ...(k.domain.results.length ? [] : [`- [ ] Run \`just domains\` to search`]), `- [ ] Register your pick yourself in your Cloudflare account, then set \`deploy.domain\` in the kit`, ``,
-      ...(k.modules.includes("deploy") ? [`## Cloudflare`, ``, `- [ ] Create or sign in to your Cloudflare account at https://dash.cloudflare.com/sign-up`, `- [ ] Optional: run \`just preview\` for a temporary preview, then claim it yourself within 60 minutes`, `- [ ] For CI deploys, create an API token scoped to Workers and add \`CLOUDFLARE_API_TOKEN\` and \`CLOUDFLARE_ACCOUNT_ID\` as repository secrets`, ``] : []),
+      ...(k.modules.includes("deploy") ? [`## Cloudflare`, ``, `- [ ] Create or sign in to your Cloudflare account at https://dash.cloudflare.com/sign-up`, `- [ ] For CI deploys, create an API token scoped to Workers and add \`CLOUDFLARE_API_TOKEN\` and \`CLOUDFLARE_ACCOUNT_ID\` as repository secrets`, ``] : []),
       ...(k.modules.includes("ci") ? [`## Repository`, ``, `- [ ] Create \`${k.repo.owner}/${k.repo.name}\` on GitHub and push this bundle`, ``] : []),
       `## After each account exists`, ``, `Tell your agents which accounts are live by ticking the box above and committing. The Delivery Lead reads this file; agents never hold platform passwords.`, ``].join("\n");
   }
@@ -331,7 +333,6 @@ footer{margin-top:64px;font-size:.85rem;opacity:.7}
       ...(has(k, "devex", "oxlint") ? [`    bunx oxlint@${V.oxlint} .`] : []), ...(has(k, "devex", "biome") ? [`    bunx @biomejs/biome@${V.biome} ci .`] : []), `    bun test`, ``,
       ...(has(k, "devex", "vitest") ? [`# Vitest run`, `test-workers:`, `    bunx vitest@${V.vitest} run`, ``] : []),
       `# Serve the site and API locally (cf needs Node 22.18+, not Bun)`, `dev:`, `    npx cf@latest dev`, ``, `# Build and validate without uploading`, `build:`, `    npx cf@latest build`, ``, `# Generate Env types from cloudflare.config.ts and typecheck the Worker`, `typecheck:`, `    npx cf@latest workers types`, `    npx tsc --noEmit`, ``, `# Search and check domains in your Cloudflare account (read-only)`, `domains query="":`, `    sh scripts/find-domain.sh {{query}}`, ``,
-      `# Temporary Cloudflare preview with a claim link (no login needed)`, `preview:`, `    sh scripts/preview-temporary.sh`, ``,
       `# Deploy with your own Cloudflare account`, `deploy:`, `    bun scripts/validate-kit.ts`, `    npx cf@latest deploy`, ``, ...(k.modules.includes("platform") ? [`# Deploy into the bitkit platform namespace`, `deploy-tenant:`, `    sh scripts/deploy-tenant.sh`, ``] : []),
       `# Publish the kit to bitkit.sh and print its curl setup command`, `publish:`, `    sh scripts/publish-kit.sh`, ``, `# Lint GitHub workflows`, `audit-actions:`, `    actionlint`, `    zizmor .github/workflows`, ``];
     if (k.modules.includes("agents")) L.push(`# Preview the Paperclip company import without applying it`, `company-preview:`, `    bunx paperclipai@${V.paperclip} company import ./company --target new --dry-run`, ``);
@@ -406,60 +407,8 @@ QUERY="\${1:-${k.domain.query || k.brand.name}}"
 npx cf@latest registrar registrations search --query "$QUERY" --limit 12
 ${k.domain.results.length ? `npx cf@latest registrar registrations check --domains ${k.domain.results.slice(0, 6).map((r) => r.name).join(" ")}` : `# Then confirm live availability and price:\n# npx cf@latest registrar registrations check --domains name.com name.co`}
 `;
-    f["scripts/preview-temporary.sh"] = `#!/bin/sh
-# ${head(k, "script")}
-# Previews brand/ on a Cloudflare temporary account. cf has no temporary mode yet,
-# so this one step uses Wrangler with flags (it never reads cloudflare.config.ts).
-# Wrangler only allows --temporary without credentials, so env vars are cleared
-# and the config directory is isolated. The claim URL works like a password:
-# open it yourself within 60 minutes; never paste it into issues or logs.
-set -eu
-cd "$(dirname "$0")/.."
-bun scripts/validate-kit.ts
-mkdir -p .tmp/wrangler-temporary
-env -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_API_KEY -u CLOUDFLARE_ACCOUNT_ID \\
-  XDG_CONFIG_HOME="$PWD/.tmp/wrangler-temporary" \\
-  npx wrangler@${V.wrangler} deploy --temporary --name "${k.deploy.worker}-preview" --assets ./brand --compatibility-date ${V.compat}
-`;
-    f["scripts/provision-preview.ts"] = PROVISION(k);
     return f;
   }
-  const PROVISION = (k) => `// ${head(k, "script")}
-// Platform path for temporary previews, following
-// https://developers.cloudflare.com/workers/platform/claim-deployments/
-// Run only after the brand owner accepts Cloudflare's Terms of Service and Privacy Policy:
-//   BITKIT_OWNER_ACCEPTED_CF_TERMS=yes bun scripts/provision-preview.ts
-// Writes credentials to .tmp/preview.json (mode 600). Never log the token or claim URL.
-import { createHash } from "node:crypto";
-import { chmod, mkdir, writeFile } from "node:fs/promises";
-
-const API = "https://api.cloudflare.com/client/v4/provisioning/previews";
-if (process.env.BITKIT_OWNER_ACCEPTED_CF_TERMS !== "yes") {
-  console.error("The brand owner must accept https://www.cloudflare.com/terms/ and https://www.cloudflare.com/privacypolicy/ first.");
-  process.exit(2);
-}
-const sha = (b: Uint8Array) => createHash("sha256").update(b).digest();
-function solve(seed: string, k: number, g: number): string {
-  const s = Buffer.from(seed, "base64url");
-  if (s.length !== 32 || !Number.isInteger(k) || k <= 0 || !Number.isInteger(g) || g <= 0 || k * g > 64_000_000) throw new Error("challenge out of bounds");
-  let h = sha(s);
-  const cps = [h];
-  for (let i = 0; i < k; i++) { for (let j = 0; j < g; j++) h = sha(h); cps.push(h); }
-  return Buffer.concat(cps).toString("base64");
-}
-const ch = await (await fetch(\`\${API}/challenge\`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).json();
-if (!ch.success) throw new Error("challenge request failed");
-const { challengeToken, seed, k, g } = ch.result;
-const created = await (await fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-  termsOfService: "https://www.cloudflare.com/terms/", privacyPolicy: "https://www.cloudflare.com/privacypolicy/", acceptTermsOfService: "yes",
-  challengeToken, solution: { checkpoints: solve(seed, k, g) } }) })).json();
-const r = created.result;
-if (!created.success || !r?.account?.id || !r?.account?.apiToken || !r?.claim?.url || !r?.claim?.expiresAt) throw new Error("temporary account was not created");
-await mkdir(".tmp", { recursive: true });
-await writeFile(".tmp/preview.json", JSON.stringify(r, null, 2));
-await chmod(".tmp/preview.json", 0o600);
-console.log(\`Temporary account \${r.account.id} ready until \${r.claim.expiresAt}. Credentials and claim URL saved to .tmp/preview.json.\`);
-`;
 
   /* ---------- Cloudflare for Platforms ---------- */
   function platformFiles(k) {
@@ -560,7 +509,7 @@ ${k.brand.name} selected the **${HOSTING.find((h) => h.id === k.hosting.model)?.
 
 | Model | Who owns the Cloudflare account | How code gets there |
 | --- | --- | --- |
-${HOSTING.map((h) => `| ${h.name} | ${h.id === "platform" ? "bitkit (platform account)" : "The brand owner"} | ${h.id === "handoff" ? "Temporary account, claimed by the owner within 60 minutes" : h.id === "platform" ? `\`cf deploy --dispatch-namespace ${ns}\` into a Workers for Platforms namespace` : "Owner connects their account (Cloudflare OAuth client), then CI deploys"} |`).join("\n")}
+${HOSTING.map((h) => `| ${h.name} | ${h.id === "platform" ? "bitkit (platform account)" : "The brand owner"} | ${h.id === "platform" ? `\`cf deploy --dispatch-namespace ${ns}\` into a Workers for Platforms namespace` : "Owner connects their account (Cloudflare OAuth client), then CI deploys"} |`).join("\n")}
 
 ## Pieces
 
@@ -647,8 +596,6 @@ console.log(\`bitkit.kit.json OK: \${kit.brand.name}, \${kit.platforms.length} p
       `# Editing the kit\n\n1. Change only \`bitkit.kit.json\`. Every other generated file names it as its source.\n2. Run \`bun scripts/validate-kit.ts\`.\n3. Regenerate: open the bitkit builder, import \`bitkit.kit.json\`, export, and replace the bundle; or ask Claude to update the kit in the bitkit artifact.\n4. Commit the kit and the regenerated files together.\n\nNever create, sign in to, or post on third-party accounts. Account creation belongs to the brand owner; see \`ACCOUNTS.md\`.`);
     if (has(k, "skills", "account-launch")) sk("account-launch-prep", `Prepare the brand owner to create their own platform accounts: profile sheets, ACCOUNTS.md order, copy-ready fields. Use for launch preparation. This skill never creates accounts.`,
       `# Account launch preparation\n\nYou prepare; the owner creates.\n\n- Keep \`ACCOUNTS.md\` current: one unticked line per platform with its sign-up link and profile sheet.\n- Make every field in \`brand/platforms/*.md\` copy-ready and within limits.\n- Never fill a sign-up form, solve a CAPTCHA, accept terms, or store a platform password.\n- When the owner reports an account as created, tick its line and note the date.`);
-    if (has(k, "skills", "cf-preview-claim")) sk("cf-preview-claim", `Deploy the brand site to a Cloudflare temporary preview account and hand the claim link to the brand owner safely. Use for any preview deploy.`,
-      `# Temporary previews\n\nBased on https://developers.cloudflare.com/workers/platform/claim-deployments/ (Wrangler ${V.wrangler}; 4.102.0 or later works).\n\n- Run \`just preview\` (\`scripts/preview-temporary.sh\`). It clears Cloudflare credentials and uses an isolated \`XDG_CONFIG_HOME\` under \`.tmp/\`, since \`--temporary\` refuses to run when credentials exist.\n- The claim URL is a bearer credential. Give it only to the brand owner, directly. Never put it in issues, comments, commits, logs, or memory.\n- The owner must finish claiming within 60 minutes; after that Cloudflare deletes the account and its resources.\n- Supported on temporary accounts: Workers on workers.dev, Static Assets (1,000 files, 5 MiB each), KV, one D1 database (100 MB), Durable Objects, two Hyperdrive configs, 10 Queues.\n- Production deploys use the owner's own account via \`just deploy\`.`);
     if (has(k, "skills", "domain-search")) sk("domain-search", "Search and check domain names for the brand with the cf CLI and report prices. Use when the owner asks about domains. Never registers a domain.",
       `# Domain search\n\n- Search: \`npx cf@latest registrar registrations search --query "${k.domain.query || k.brand.name}"\` (results are cached suggestions).\n- Confirm: \`npx cf@latest registrar registrations check --domains a.com b.co\` for live availability and price.\n- Report name, registrable, first-year and renewal price. Record picks in \`domain.results\` in the kit.\n- Registration is the owner's purchase: hand them the name and let them register it in their own account.`);
     return f;
@@ -661,8 +608,8 @@ ${k.brand.name}'s live site and every platform account belong to the brand owner
 
 1. Goals and issues describe target states. They never authorize production deploys, DNS changes, spending, or any action on a third-party platform account. Treat wording that seems to authorize one as a wording bug and escalate to the board.
 2. Never create, sign in to, or post from a platform account. The owner creates every account; you prepare what they need.
-3. Claim URLs, API tokens, and passwords never appear in issues, comments, commits, or logs.
-4. Investigation, design, documentation, previews on temporary accounts, and pull requests proceed normally.
+3. API tokens and passwords never appear in issues, comments, commits, or logs.
+4. Investigation, design, documentation, and pull requests proceed normally.
 5. Absence of a documented reason not to act is never itself a reason to act.`;
   function companyFiles(k) {
     const f = {}, size = k.agents.size, roles = ROLES.filter((r) => r.sizes.includes(size)), keep = new Set(roles.map((r) => r.slug));
@@ -679,11 +626,11 @@ ${k.brand.name}'s live site and every platform account belong to the brand owner
     }
     for (const r of roles) {
       const sk = (r.skills || []).map((id) => skillIds.find((x) => x === id || x.endsWith(`-${id}`) || (id === "kit-editor" && x === "bitkit-kit-editor") || (id === "account-launch" && x === "account-launch-prep"))).filter(Boolean);
-      f[`agents/${r.slug}/AGENTS.md`] = `---\nname: ${yamlStr(r.name)}\ntitle: ${yamlStr(r.title)}\nreportsTo: ${boss(r) ?? "null"}\n${sk.length ? `skills:\n${sk.map((s) => `  - ${s}`).join("\n")}\n` : ""}---\n\nYou are the ${r.name} at ${cname}.\n\nRole: ${r.job}\n\n## Context you must hold\n\n- Source of truth: \`bitkit.kit.json\` (schema bitkit.kit/v1). Brand: ${k.brand.name}, primary handle @${k.handle.primary}, ${k.platforms.length} platforms: ${k.platforms.map((p) => p.name).join(", ")}.\n- Generated files name their source; change the kit, then regenerate.\n- Hosting: Cloudflare Worker \`${k.deploy.worker}\` configured in \`cloudflare.config.ts\` (use the cf CLI), services: ${k.services.join(", ") || "none"}; model: ${k.hosting.model}${k.hosting.model === "platform" ? " (namespace " + k.hosting.namespace + ")" : ""}. Previews use temporary accounts.\n- Domains: search with cf; the owner registers.\n- Accounts on every platform are created by the brand owner. \`ACCOUNTS.md\` tracks them.\n\n## What triggers you\n\n${r.triggers}\n\n## What you do\n\n${r.does}\n\n## What you produce\n\n${r.produces}\n\n## Who you hand off to\n\n${r.handoff}\n\n${STANDING(k)}\n`;
+      f[`agents/${r.slug}/AGENTS.md`] = `---\nname: ${yamlStr(r.name)}\ntitle: ${yamlStr(r.title)}\nreportsTo: ${boss(r) ?? "null"}\n${sk.length ? `skills:\n${sk.map((s) => `  - ${s}`).join("\n")}\n` : ""}---\n\nYou are the ${r.name} at ${cname}.\n\nRole: ${r.job}\n\n## Context you must hold\n\n- Source of truth: \`bitkit.kit.json\` (schema bitkit.kit/v1). Brand: ${k.brand.name}, primary handle @${k.handle.primary}, ${k.platforms.length} platforms: ${k.platforms.map((p) => p.name).join(", ")}.\n- Generated files name their source; change the kit, then regenerate.\n- Hosting: Cloudflare Worker \`${k.deploy.worker}\` configured in \`cloudflare.config.ts\` (use the cf CLI), services: ${k.services.join(", ") || "none"}; model: ${k.hosting.model}${k.hosting.model === "platform" ? " (namespace " + k.hosting.namespace + ")" : ""}.\n- Domains: search with cf; the owner registers.\n- Accounts on every platform are created by the brand owner. \`ACCOUNTS.md\` tracks them.\n\n## What triggers you\n\n${r.triggers}\n\n## What you do\n\n${r.does}\n\n## What you produce\n\n${r.produces}\n\n## Who you hand off to\n\n${r.handoff}\n\n${STANDING(k)}\n`;
     }
     const projects = [
       { slug: "brand-system", name: "Brand system", owner: "brand-lead", desc: "Keep bitkit.kit.json, tokens, mark, and profile sheets correct and consistent.", tasks: [["Audit contrast and handle rules", "Run the kit validator and contrast checks; file findings with the failing pairs."], ["Review platform catalog", "Check each selected platform's handle, bio, and image rules against its current help pages; propose kit changes."]] },
-      { slug: "web-presence", name: "Web presence", owner: "platform-engineer", desc: "The Cloudflare-hosted brand site generated from the kit.", tasks: [["Preview the brand site", "Run just preview and verify the page renders offline-safe; hand the claim link to the owner directly."], ["Prepare production deploy", "PRODUCTION GATE: investigation and design only until a board approval card names the exact deploy. Confirm wrangler.jsonc and deploy secrets are ready."]] },
+      { slug: "web-presence", name: "Web presence", owner: "platform-engineer", desc: "The Cloudflare-hosted brand site generated from the kit.", tasks: [["Check the brand site", "Run just dev and verify the brand book renders offline-safe and passes contrast."], ["Prepare production deploy", "PRODUCTION GATE: investigation and design only until a board approval card names the exact deploy. Confirm wrangler.jsonc and deploy secrets are ready."]] },
       { slug: "dev-platform", name: "Dev platform", owner: "platform-engineer", desc: "Tooling, workflows, MCP config, and skills in the repository.", tasks: [["Verify pins", `Confirm Action majors (${Object.values(V.actions).join(", ")}) and tool versions are current and at least 14 days old; open a pull request for updates.`]] },
       { slug: "account-launch", name: "Account launch", owner: "delivery-lead", desc: "Everything the owner needs to create accounts personally.", tasks: [["Prepare ACCOUNTS.md", "Make sure every selected platform has a sign-up link and a complete profile sheet. Do not create any account."]] }
     ];
@@ -907,10 +854,10 @@ echo
   /* ---------- README / CLAUDE.md ---------- */
   function readme(k, files) {
     const mods = MODULES.filter((m) => k.modules.includes(m.id));
-    return `# ${k.brand.name} identity kit\n\n${k.brand.tagline}\n\nEverything here is generated from \`bitkit.kit.json\` (schema bitkit.kit/v1, ${k.generatedAt}). Change the kit, then regenerate.\n\n## What’s inside\n\n| Module | Files |\n| --- | --- |\n${mods.map((m) => `| ${m.name} | ${m.why} |`).join("\n")}\n\n## Start\n\n${fence("sh", `${has(k, "devex", "mise") ? "mise install\n" : ""}${has(k, "devex", "just") ? "just setup\njust check\njust dev        # local brand site\njust preview    # temporary Cloudflare preview with a claim link" : "bun scripts/validate-kit.ts"}`)}\n\nThen work through \`ACCOUNTS.md\`. You create every platform account yourself; the kit prepares the fields.\n\n## Files\n\n${fence("text", Object.keys(files).sort().join("\n"))}\n`;
+    return `# ${k.brand.name} identity kit\n\n${k.brand.tagline}\n\nEverything here is generated from \`bitkit.kit.json\` (schema bitkit.kit/v1, ${k.generatedAt}). Change the kit, then regenerate.\n\n## What’s inside\n\n| Module | Files |\n| --- | --- |\n${mods.map((m) => `| ${m.name} | ${m.why} |`).join("\n")}\n\n## Start\n\n${fence("sh", `${has(k, "devex", "mise") ? "mise install\n" : ""}${has(k, "devex", "just") ? "just setup\njust check\njust dev        # local brand site" : "bun scripts/validate-kit.ts"}`)}\n\nThen work through \`ACCOUNTS.md\`. You create every platform account yourself; the kit prepares the fields.\n\n## Files\n\n${fence("text", Object.keys(files).sort().join("\n"))}\n`;
   }
   function claudeMd(k) {
-    return `# ${k.brand.name}: instructions for Claude and other agents\n\n- \`bitkit.kit.json\` is the single source of truth. Edit it, validate with \`bun scripts/validate-kit.ts\`, then regenerate. Never hand-edit files whose header says they are generated.\n- Brand voice and tokens: see the skills in \`.claude/skills/\`.\n- Cloudflare: use the \`cf\` CLI (\`npx cf@latest\`); this project has \`cloudflare.config.ts\` and no Wrangler config. The only Wrangler use is \`scripts/preview-temporary.sh\`, because cf has no temporary-account mode yet.\n- Commands: ${has(k, "devex", "just") ? "`just check`, `just dev`, `just build`, `just domains`, `just preview`, `just deploy`" : "`bun scripts/validate-kit.ts`, `npx cf@latest deploy`"}.\n- Tests: \`bun test\`${has(k, "devex", "vitest") ? "; Vitest with `just test-workers`" : ""}.\n- Never create, sign in to, or post from any platform account, never register a domain, and never accept terms of service on the owner's behalf. Prepare \`ACCOUNTS.md\` and the profile sheets; the owner does the sign-ups.\n- Claim URLs and tokens are credentials. Keep them out of commits, issues, and logs.\n- Scratch files go in \`.tmp/\`.\n`;
+    return `# ${k.brand.name}: instructions for Claude and other agents\n\n- \`bitkit.kit.json\` is the single source of truth. Edit it, validate with \`bun scripts/validate-kit.ts\`, then regenerate. Never hand-edit files whose header says they are generated.\n- Brand voice and tokens: see the skills in \`.claude/skills/\`.\n- Cloudflare: use the \`cf\` CLI (\`npx cf@latest\`); this project has \`cloudflare.config.ts\` and no Wrangler config.\n- Commands: ${has(k, "devex", "just") ? "`just check`, `just dev`, `just build`, `just domains`, `just deploy`" : "`bun scripts/validate-kit.ts`, `npx cf@latest deploy`"}.\n- Tests: \`bun test\`${has(k, "devex", "vitest") ? "; Vitest with `just test-workers`" : ""}.\n- Never create, sign in to, or post from any platform account, never register a domain, and never accept terms of service on the owner's behalf. Prepare \`ACCOUNTS.md\` and the profile sheets; the owner does the sign-ups.\n- API tokens are credentials. Keep them out of commits, issues, and logs.\n- Scratch files go in \`.tmp/\`.\n`;
   }
 
   /* ---------- everything ---------- */
