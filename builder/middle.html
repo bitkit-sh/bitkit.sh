@@ -1,0 +1,32 @@
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><span id="app-mark"></span>bitkit</div>
+  <span class="hint">identity kit builder · you create every account; bitkit prepares the rest</span>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch color theme">Theme</button>
+</header>
+<div class="shell">
+  <nav class="steps" id="steps" aria-label="Kit steps"></nav>
+  <main class="panel" id="panel"></main>
+  <aside class="preview" aria-label="Claude and live preview">
+    <section class="claude-card" aria-label="Customize with Claude">
+      <header><b>Customize with Claude</b><span class="sync" data-region="sync">This browser only</span></header>
+      <div id="ask-box" hidden>
+        <label class="lbl" for="ask">Describe a change</label>
+        <textarea id="ask" placeholder="Make the palette warmer, add Bluesky and YouTube, and use the full agent team"></textarea>
+        <div class="row2"><button class="btn" type="button" id="ask-btn">Apply with Claude</button><span class="help">⌘/Ctrl + Enter</span></div>
+      </div>
+      <p id="ask-status" role="status"></p>
+      <p class="help" style="margin:0">You can also ask in the chat beside this page; Claude edits this same kit and the builder updates.</p>
+    </section>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-book" aria-selected="true" type="button">Brand book</button>
+      <button role="tab" id="tab-prof" aria-selected="false" type="button">Profiles</button>
+      <button role="tab" id="tab-files" aria-selected="false" type="button">Files</button>
+    </div>
+    <div id="preview"></div>
+  </aside>
+</div>
+<script id="bitkit-gen">
