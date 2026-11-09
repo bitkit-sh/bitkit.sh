@@ -3,8 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@openauthjs/openauth": "0.4.3",
-    "valibot": "1.2.0"
+    "@cloudflare/workers-oauth-provider": "1.2.4"
   },
   "scripts": {
     "dev": "cf dev",
@@ -12,9 +11,9 @@
     "deploy": "cf deploy"
   },
   "devDependencies": {
-    "cf": "latest",
-    "vite": "8.3.5",
     "@cloudflare/vite-plugin": "2.0.0-beta.v.4",
-    "typescript": "7.0.2"
+    "cf": "latest",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
   }
 }

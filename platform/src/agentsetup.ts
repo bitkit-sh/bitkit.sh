@@ -8,34 +8,34 @@ export const kitOneLine = (id: string) => `Fetch and follow the instructions to 
 
 const connect = `## Connect bitkit
 
-Use the section for the agent you are running in.
+bitkit uses OAuth, like Cloudflare's MCP servers: the first time the agent connects, the user signs in to their bitkit account in the browser (or creates one) and approves access. They stay signed in for 30 days.
 
 ### Claude Code
 
-Run these commands yourself. Ask the user for their bitkit edit key first (it starts with \`bk_\`) and pass it through an environment variable so it is never printed.
+Run this yourself:
 
 \`\`\`sh
-claude mcp add --transport http --scope user bitkit ${MCP} --header "x-auth-token: $BITKIT_KEY"
+claude mcp add --transport http --scope user bitkit ${MCP}
 mkdir -p ~/.claude/skills && curl -fsSL ${SKILL_ZIP} -o /tmp/bitkit-skill.zip && unzip -o /tmp/bitkit-skill.zip -d ~/.claude/skills && rm /tmp/bitkit-skill.zip
 \`\`\`
 
-If the user has no edit key yet, add the connector without the \`--header\` part; reading kits works without it. Then tell the user to run \`/mcp\` to confirm bitkit is connected.
+Then tell the user to run \`/mcp\`, choose bitkit, and authenticate.
 
 ### Claude (web, desktop, or mobile)
 
 You cannot change these settings yourself. Walk the user through it:
 
 1. Settings → Connectors → Add custom connector. Name: bitkit. URL: \`${MCP}\`.
-2. Authentication: No sign-in. Request headers: name \`x-auth-token\`, value their edit key, Required checked.
-3. Optional: Settings → Capabilities → Skills → upload ${SKILL_ZIP}.
+2. Authentication: Sign in when needed. OAuth client: Use Claude's published identity. No request headers.
+3. Click Connect, then sign in to bitkit (or create an account) and allow access.
 
 ### Other MCP clients (Codex, Cursor, VS Code, OpenCode)
 
-Add a remote (HTTP) MCP server named \`bitkit\` at \`${MCP}\` in the client's MCP config, with the header \`x-auth-token: <edit key>\`. Install the skill from ${SKILL_ZIP} where the client loads skills.`;
+Add a remote (HTTP) MCP server named \`bitkit\` at \`${MCP}\`. OAuth starts automatically on first use.`;
 
 const rules = `## Rules
 
-- Never print, repeat, or write the edit key into any file, commit, or chat message.
+- Never ask for or handle the user's password; they sign in on bitkit's own page.
 - Never create, sign in to, or post from social or registrar accounts, and never register domains or accept terms for the user. The user does those; their kit's ACCOUNTS.md lists each step.`;
 
 export function setupPrompt(): string {
