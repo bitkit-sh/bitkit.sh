@@ -34,7 +34,8 @@ section{padding:clamp(56px,8vw,96px) 0;border-top:1px solid var(--line)}.kicker{
 .grid div{background:var(--raised);padding:22px}.grid p{margin:8px 0 0;color:var(--muted);font-size:16px}
 .claude{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,56px);align-items:start}
 pre{margin:0;background:#17161a;color:#f1ece6;border-radius:16px;padding:18px 20px;overflow-x:auto;font:13.5px/1.7 ui-monospace,Menlo,monospace}pre .c{color:#8f8a93}pre .k{color:#e8b54a}
-.note{font-size:14px;color:var(--muted)}footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+.note{font-size:14px;color:var(--muted)}.lbl{margin:0 0 8px;font-weight:600}.prompt{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px 16px;margin-bottom:14px}.prompt code{flex:1 1 260px;font:13.5px/1.5 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+button.btn{cursor:pointer;font:inherit;font-weight:600}footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media (max-width:860px){.hero,.claude{grid-template-columns:1fr}nav a:not(.btn){display:none}}
 </style></head><body>
@@ -43,7 +44,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <div class="wrap hero">
   <div><h1>Brand identity in a box.</h1>
   <p class="lede">Name your brand and pick your handle. bitkit builds the design system, the website, and the launch checklist, and runs it all for you on Cloudflare.</p>
-  <div class="cta"><a class="btn p" href="https://app.bitkit.sh/">Start your kit</a><a class="btn s" href="https://kit-coopers-coffee.bitkit.sh/">See a live kit</a></div></div>
+  <div class="cta"><a class="btn p" href="https://app.bitkit.sh/">Start your kit</a><button class="btn s" type="button" data-copy="Fetch and follow the instructions to set me up for bitkit from https://app.bitkit.sh/agent-setup/prompt.md">Copy prompt for Claude</button><a class="btn s" href="https://kit-coopers-coffee.bitkit.sh/">See a live kit</a></div></div>
   <div class="kit" aria-label="Example kit for Cooper’s Coffee">
     <div class="row"><div class="seal">C</div><div><b>Cooper’s Coffee</b><div class="h">@cooperscoffee · coopers.coffee</div></div></div>
     <div class="chips"><i style="background:#5a3a22"></i><i style="background:#c9a27e"></i><i style="background:#2f6f5e"></i><i style="background:#1f1611"></i><i style="background:#faf6f1"></i></div>
@@ -67,8 +68,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   <div><h3>Everything, downloadable</h3><p>Export the whole kit anytime: brand files, website code, and a one-line setup command.</p></div>
 </div></div></section>
 <section id="claude"><div class="wrap claude"><div><h2>Bring your own Claude.</h2><p class="kicker">The bitkit plugin connects your Claude to your kit. Claude reads your kit, builds the design system with you, and sends it back for bitkit to publish.</p>
-<div class="cta"><a class="btn p" href="https://app.bitkit.sh/plugin.zip">Download the plugin</a><a class="btn s" href="https://app.bitkit.sh/skill.zip">Skill only</a></div>
-<p class="note">The plugin includes the bitkit skill and the connector at app.bitkit.sh/mcp. Claude never creates accounts or registers domains for you.</p></div>
+<p class="lbl">Paste this into Claude, Claude Code, or any agent:</p>
+<div class="prompt"><code>Fetch and follow the instructions to set me up for bitkit from https://app.bitkit.sh/agent-setup/prompt.md</code><button class="btn p" type="button" data-copy="Fetch and follow the instructions to set me up for bitkit from https://app.bitkit.sh/agent-setup/prompt.md">Copy prompt</button></div>
+<p class="note">Your agent reads <a href="https://app.bitkit.sh/agent-setup/prompt.md">the setup instructions</a>, connects to bitkit, and builds your design system with you. Prefer to install by hand? <a href="https://app.bitkit.sh/plugin.zip">Plugin</a> · <a href="https://app.bitkit.sh/skill.zip">Skill</a> · <a href="https://app.bitkit.sh/llms.txt">llms.txt</a>. Claude never creates accounts or registers domains for you.</p></div>
 <pre><span class="c"># In Claude, after adding the plugin</span>
 <span class="k">you</span>    Build my design system from kit gmzz7vbo5w3pvb3iix7q
 <span class="k">claude</span> Reading your kit… creating “Cooper’s Coffee”
@@ -78,4 +80,5 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
        Live at kit.coopers.coffee</pre></div></section>
 </main>
 <footer><div class="wrap"><span>bitkit · brand identity kits on Cloudflare</span><span><a href="https://app.bitkit.sh/">Builder</a> · <a href="https://app.bitkit.sh/mcp">MCP</a></span></div></footer>
+<script>document.addEventListener("click",async(e)=>{const b=e.target.closest("[data-copy]");if(!b)return;const t=b.dataset.copy,l=b.textContent;try{await navigator.clipboard.writeText(t);b.textContent="Copied";}catch{const a=document.createElement("textarea");a.value=t;document.body.append(a);a.select();document.execCommand("copy");a.remove();b.textContent="Copied";}setTimeout(()=>b.textContent=l,1600);});</script>
 </body></html>
