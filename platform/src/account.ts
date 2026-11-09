@@ -6,6 +6,10 @@ import { subjects } from "./subjects.ts";
 export const ISSUER = "https://auth.bitkit.sh";
 const CLIENT_ID = "app.bitkit.sh";
 const client = createClient({ clientID: CLIENT_ID, issuer: ISSUER });
+// MCP clients discover the authorization server on the MCP origin, so tokens for Claude carry iss=https://app.bitkit.sh.
+// Same backend and signing keys; JWKS is read from auth.bitkit.sh.
+export const MCP_ISSUER = "https://app.bitkit.sh";
+const mcpClient = createClient({ clientID: CLIENT_ID, issuer: MCP_ISSUER, fetch: (input, init) => fetch(String(input instanceof Request ? input.url : input).replace(MCP_ISSUER, ISSUER), init) });
 export type User = { id: string; email: string };
 
 const cookie = (name: string, value: string, maxAge: number) => `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
@@ -18,7 +22,8 @@ export async function sessionUser(req: Request): Promise<{ user: User | null; se
   const access = bearer ?? read(req, "bk_at");
   const refresh = bearer ? undefined : read(req, "bk_rt");
   if (!access && !refresh) return { user: null, setCookies: [] };
-  const v = await client.verify(subjects, access ?? "", refresh ? { refresh } : undefined).catch(() => null);
+  let v = await client.verify(subjects, access ?? "", refresh ? { refresh } : undefined).catch(() => null);
+  if ((!v || v.err) && bearer) v = await mcpClient.verify(subjects, bearer).catch(() => null);
   if (!v || v.err) return { user: null, setCookies: [] };
   const setCookies = v.tokens ? [cookie("bk_at", v.tokens.access, 60 * 15), cookie("bk_rt", v.tokens.refresh, 60 * 60 * 24 * 30)] : [];
   return { user: v.subject.properties as User, setCookies };

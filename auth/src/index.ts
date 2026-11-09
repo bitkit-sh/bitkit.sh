@@ -14,6 +14,7 @@ const mark = (letter: string, color: string) =>
   `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="${color}"/><text x="60" y="62" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="700" font-size="58" fill="#fff">${letter}</text></svg>`)}`;
 const BRANDS: Record<string, Brand> = {
   "auth.bitkit.sh": { title: "bitkit", primary: "#8e1b2e", logo: mark("b", "#8e1b2e") },
+  "app.bitkit.sh": { title: "bitkit", primary: "#8e1b2e", logo: mark("b", "#8e1b2e") },
   "auth.appx.sh": { title: "appx", primary: "#3b5bdb", logo: mark("a", "#3b5bdb") },
   "auth.cloudx.sh": { title: "cloudx", primary: "#0b7285", logo: mark("c", "#0b7285") },
   "auth.plat.sh": { title: "plat.sh", primary: "#c00068", logo: mark("p", "#c00068") },
