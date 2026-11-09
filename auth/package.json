@@ -1,0 +1,20 @@
+{
+  "name": "bitbuilder-auth",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@openauthjs/openauth": "0.4.3",
+    "valibot": "1.2.0"
+  },
+  "scripts": {
+    "dev": "cf dev",
+    "build": "cf build",
+    "deploy": "cf deploy"
+  },
+  "devDependencies": {
+    "cf": "latest",
+    "vite": "8.3.5",
+    "@cloudflare/vite-plugin": "2.0.0-beta.v.4",
+    "typescript": "7.0.2"
+  }
+}
